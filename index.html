@@ -665,97 +665,195 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
 <!-- ################ SET 00 — FOUNDATIONS ################ -->
 
 <section class="sec" id="f-bigo" data-nav="F.1 · Big-O from zero" data-group="Set 00 · Foundations">
-  <p class="eyebrow"><span class="dim">§F.1</span> · SET 00 — FOUNDATIONS</p>
+  <p class="eyebrow"><span class="dim">§F.1</span> · SET 00 — FOUNDATIONS · READ THIS SET FIRST</p>
   <h2>Big-O from zero</h2>
-  <p>Big-O answers one question: <strong>as the input grows, how fast does the work grow?</strong> We count the dominant operation (comparisons, additions, visits) as a function of input size n, ignoring machine speed and constant factors — because those don't change which algorithm survives when n gets big. A useful physical anchor: a computer does very roughly <strong>10⁸–10⁹ simple operations per second</strong>.</p>
+  <p>Before any pattern in this lab makes sense, you need one skill: <strong>looking at code and predicting how much slower it gets as the input grows.</strong> That is the whole of Big-O. It is not advanced math — it is counting, plus one honest observation about growth.</p>
+  <p><strong>Start with a picture you already know.</strong> Two ways to find a name in a phone book: flip page by page, or open the middle and throw away the wrong half each time. For a 20-page book, both feel instant. For a million pages, page-by-page takes days and halving takes about 20 flips. <em>Same task, wildly different growth</em> — and Big-O is just the label we put on each behaviour: page-by-page grows like n (we write O(n)); halving grows like log n (we write O(log n)).</p>
+  <p><strong>What we actually do:</strong> pick the operation the code repeats (a comparison, an addition, a visit) and count how many times it runs as a formula in n, the input size. We deliberately ignore two things: how fast the computer is, and small constant factors — because neither changes the <em>shape</em> of the growth, and the shape is what decides whether your solution survives a big input.</p>
+  <figure class="fig"><svg viewBox="0 0 640 240" role="img" aria-label="Growth curves for common complexities">
+<line class="dg-e" x1="50" y1="210" x2="600" y2="210"/>
+<line class="dg-e" x1="50" y1="210" x2="50" y2="18"/>
+<text class="dg-td" x="325" y="232" text-anchor="middle">input size n →</text>
+<text class="dg-td" x="28" y="115" text-anchor="middle" transform="rotate(-90 28 115)">work →</text>
+<path class="dg-ea" d="M 50 210 C 140 165 300 152 585 143" fill="none"/>
+<text class="dg-ta" x="556" y="132">log n</text>
+<line class="dg-ea" x1="50" y1="210" x2="585" y2="98"/>
+<text class="dg-ta" x="560" y="88">n</text>
+<path class="dg-e" d="M 50 210 C 280 150 450 95 585 40" fill="none"/>
+<text class="dg-td" x="530" y="34">n log n</text>
+<path class="dg-ew" d="M 50 210 C 330 205 460 140 505 22" fill="none"/>
+<text class="dg-tw" x="512" y="16">n²</text>
+</svg><figcaption>The shapes, not the numbers, are what matter. Near the origin everything looks harmless; the shape decides who survives when n grows.</figcaption></figure>
+  <p><strong>One anchor number makes all of this concrete:</strong> a computer runs very roughly <strong>100 million to 1 billion simple steps per second</strong>. So a step-count converts straight into seconds:</p>
   <div class="tblwrap"><table class="tbl">
     <tr><th>Growth</th><th>n = 1,000</th><th>n = 100,000</th><th>Verdict at 10⁵</th></tr>
-    <tr><td class="m">O(log n)</td><td class="m">~10</td><td class="m">~17</td><td>instant</td></tr>
+    <tr><td class="m">O(log n)</td><td class="m">~10 steps</td><td class="m">~17 steps</td><td>instant</td></tr>
     <tr><td class="m">O(n)</td><td class="m">10³</td><td class="m">10⁵</td><td>instant</td></tr>
     <tr><td class="m">O(n log n)</td><td class="m">10⁴</td><td class="m">1.7·10⁶</td><td>fast</td></tr>
-    <tr><td class="m">O(n²)</td><td class="m">10⁶</td><td class="m">10¹⁰</td><td><strong>too slow</strong></td></tr>
-    <tr><td class="m">O(2ⁿ)</td><td class="m">10³⁰¹</td><td class="m">—</td><td>only for n ≤ ~20</td></tr>
+    <tr><td class="m">O(n²)</td><td class="m">10⁶</td><td class="m">10¹⁰ ≈ 100 seconds</td><td><strong>rejected</strong></td></tr>
+    <tr><td class="m">O(2ⁿ)</td><td class="m">a 302-digit number</td><td class="m">—</td><td>only sane for n ≤ ~20</td></tr>
   </table></div>
-  <p><strong>The four counting rules:</strong></p>
+  <p><strong>The four counting rules.</strong> Every complexity claim in this lab is built from just these:</p>
   <ol>
-    <li><strong>Sequential steps add</strong> — two O(n) passes = 2n = still O(n): drop constants and lower-order terms, Big-O is about growth shape.</li>
-    <li><strong>Independent nested loops multiply</strong> — n outer × n inner = O(n²).</li>
-    <li><strong>Halving means log</strong> — a loop that cuts the problem in half each step runs ⌈log₂ n⌉ times (10⁶ → ~20 steps). This is Set 04's entire engine.</li>
-    <li><strong>Amortized = total ÷ operations</strong> — some single steps are expensive, but if the TOTAL across the whole run is bounded, average it out. The tell: something that only moves in one direction. Set 01's §2.2 is the canonical proof; you'll meet it seven more times.</li>
+    <li><strong>Steps in sequence add.</strong> Two separate loops over n = 2n steps. We still call it O(n), because 2n and n have the same shape — doubling a computer’s speed also halves the constant, and neither rescues a bad shape. That is why dropping constants is honest, not sloppy.</li>
+    <li><strong>A loop inside a loop multiplies.</strong> For each of n items, scan all n items → n × n = n². This is where most accidental slowness comes from.</li>
+    <li><strong>Halving means log.</strong> If each step cuts the remaining problem in half, 1,000,000 shrinks to 1 in about 20 steps. Whenever you spot halving, say “log”. (Set 04 is built entirely on this rule.)</li>
+    <li><strong>“Amortized” means: average it over the whole run.</strong> Sometimes one step is expensive but the <em>total</em> across all steps is provably small — so the average per step is small. The tell that this is happening: something that only ever moves in one direction. It sounds abstract now; §2.2 makes it concrete, and you will then meet the same argument seven more times.</li>
   </ol>
-  <p><strong>Space</strong> is counted the same way, but only the <em>extra</em> memory beyond the input: two pointers = O(1), a prefix array = O(n), a recursion stack = O(depth).</p>
+  <p><strong>Space is counted the same way</strong> — but for memory, and only the <em>extra</em> memory beyond the input itself: two index variables = O(1); a copy of the array = O(n); a recursion n levels deep = O(n) of hidden stack memory (next section shows why).</p>
   <div class="sec-foot"><button class="btn understood" data-sec="f-bigo">Mark understood</button></div>
 </section>
 
 <section class="sec" id="f-rec" data-nav="F.2 · Recursion mechanics" data-group="Set 00 · Foundations">
   <p class="eyebrow"><span class="dim">§F.2</span> · SET 00 — FOUNDATIONS</p>
-  <h2>Recursion mechanics — the call stack, drawn</h2>
-  <p>A recursive function is an ordinary function that calls itself. The machine handles it with a <strong>stack of frames</strong>: every call gets its own private copy of the parameters and locals, pushed on top; when a call returns, its frame pops and the caller resumes exactly where it paused. Nothing magical — just LIFO bookkeeping (Set 03's structure, run by the runtime).</p>
+  <h2>Recursion — what the computer actually does</h2>
+  <p>A recursive function is simply a function that calls itself. The definition is never the hard part. The hard part is that beginners try to hold every in-flight call in their head at once — and that feels like vertigo. The fix is to see the simple machinery underneath, then learn the professional trick for never needing to trace it at all.</p>
+  <p><strong>The machinery: a pile of sticky notes.</strong> Every function call gets its own sticky note (the technical name is a <em>stack frame</em>) holding its own copies of the parameters and local variables. Calling a function puts a new note on top of the pile. Returning throws the top note away, and the note underneath resumes exactly where it paused. That’s all recursion is: the same rule, applied to a function calling itself.</p>
 <pre class="code"><code data-lang="python">def fact(n):
-    if n == 0:          # base case — the recursion's floor
+    if n == 0:          # base case — the floor that stops the descent
         return 1
     return n * fact(n - 1)</code></pre>
-<pre class="code"><code data-lang="none">call fact(3):
+  <figure class="fig"><svg viewBox="0 0 640 220" role="img" aria-label="The call stack growing and unwinding for fact(3)">
+<text class="dg-td" x="245" y="16" text-anchor="middle">newest call on top</text>
+<rect class="dg-boxa" x="150" y="30" width="190" height="38"/><text class="dg-ta" x="245" y="53" text-anchor="middle">fact(0) → returns 1</text>
+<rect class="dg-box" x="150" y="74" width="190" height="38"/><text class="dg-t" x="245" y="97" text-anchor="middle">fact(1) waiting…</text>
+<rect class="dg-box" x="150" y="118" width="190" height="38"/><text class="dg-t" x="245" y="141" text-anchor="middle">fact(2) waiting…</text>
+<rect class="dg-box" x="150" y="162" width="190" height="38"/><text class="dg-t" x="245" y="185" text-anchor="middle">fact(3) waiting…</text>
+<path class="dg-e" d="M 118 192 L 118 42" fill="none"/><polygon class="dg-fm" points="118,42 113,54 123,54"/>
+<text class="dg-td" x="94" y="118" text-anchor="middle" transform="rotate(-90 94 118)">calls push upward</text>
+<path class="dg-ew" d="M 372 42 L 372 192" fill="none"/><polygon class="dg-fw" points="372,192 367,180 377,180"/>
+<text class="dg-tw" x="398" y="118" text-anchor="middle" transform="rotate(90 398 118)">returns pop downward</text>
+<text class="dg-tw" x="420" y="56">1</text>
+<text class="dg-tw" x="420" y="100">1·1 = 1</text>
+<text class="dg-tw" x="420" y="144">2·1 = 2</text>
+<text class="dg-tw" x="420" y="188">3·2 = 6</text>
+</svg><figcaption>fact(3), frozen at the moment the base case fires. Three calls wait below it. Returns then pop top-down, and each waiting frame resumes with the answer it was waiting for.</figcaption></figure>
+<pre class="code"><code data-lang="none">the same picture as text:
   fact(3) waits for fact(2)·        stack: [fact(3)]
     fact(2) waits for fact(1)·      stack: [fact(3), fact(2)]
       fact(1) waits for fact(0)·    stack: [fact(3), fact(2), fact(1)]
-        fact(0) returns 1           stack unwinds:
+        fact(0) returns 1           — the stack now unwinds —
       fact(1) resumes: 1·1 = 1
     fact(2) resumes: 2·1 = 2
   fact(3) resumes: 3·2 = 6</code></pre>
-  <p><strong>The contract mindset (this is the skill):</strong> write one sentence saying what f(n) <em>returns</em>. Verify the base case satisfies it. Verify the recursive step is correct <em>assuming the smaller calls already satisfy it</em>. That assumption is legitimate — it's induction — and it's why Set 06 will tell you to "trust the recursion" instead of tracing into it.</p>
+  <p><strong>The professional trick: never trace big inputs.</strong> Instead, do three small checks:</p>
+  <ol>
+    <li>Write one sentence saying what the function <em>promises</em>: “fact(n) returns n!”.</li>
+    <li>Check the smallest case keeps the promise: fact(0) = 1 ✓.</li>
+    <li>Check the general step keeps the promise <em>assuming the smaller call already does</em>: if fact(n−1) really is (n−1)!, then n · fact(n−1) = n! ✓.</li>
+  </ol>
+  <p>That assumption in step 3 feels like cheating; it isn’t — it is mathematical induction, and it is exactly how the pros stay calm. Set 06 will name this habit “trust the recursion”, and interviewers actively watch for it: tracing into a recursive call signals doubt; stating the promise and checking the step signals command.</p>
   <div class="callout callout--warn">
-    <span class="callout-label">⚠ Two real costs</span>
-    <p>(1) <strong>Depth is memory</strong>: the stack holds one frame per unfinished call — recurse 10⁵ deep and Python's ~1000-frame default limit kills you (this caveat recurs in Sets 05, 06, 09, 11). Every recursion can be rewritten with an explicit stack. (2) <strong>Repeated subproblems</strong>: naive fib(n) calls fib(k) exponentially many times — seeing that redundancy is the entire premise of Set 12.</p>
+    <span class="callout-label">⚠ The two real costs of recursion</span>
+    <p>(1) <strong>Depth is memory.</strong> Every unfinished call is a sticky note still on the pile — recurse 100,000 deep and Python quits at its ~1,000-note limit. Any recursion can be rewritten with an explicit stack; this caveat returns in Sets 05, 06, 09 and 11. (2) <strong>Repeats are time.</strong> A naive fib(n) recomputes the same sub-answers exponentially many times — noticing that repetition is the entire premise of Set 12.</p>
   </div>
   <div class="sec-foot"><button class="btn understood" data-sec="f-rec">Mark understood</button></div>
 </section>
 
 <section class="sec" id="f-hash" data-nav="F.3 · Hash tables inside" data-group="Set 00 · Foundations">
   <p class="eyebrow"><span class="dim">§F.3</span> · SET 00 — FOUNDATIONS</p>
-  <h2>Hash tables under the hood</h2>
-  <p>Half this lab says "hashmap, O(1) average". Here's what's actually happening: a <strong>hash function</strong> turns your key into a number, which picks a <strong>bucket</strong> in an internal array — so lookup jumps straight to a slot instead of scanning. Two keys can land in the same bucket (a <strong>collision</strong>); the bucket then holds a small list to search. As the table fills, it <strong>resizes</strong> (rebuilding into a bigger array), which is occasionally expensive but averages out — inserts are <em>amortized</em> O(1), your first reuse of §F.1's rule 4.</p>
-  <p><strong>Why every bound says "average":</strong> a malicious set of keys could all collide into one bucket, degrading lookups to O(n). Real inputs almost never do, but the precise claim — and the one to say in interviews — is <strong>O(1) average, O(n) worst</strong>.</p>
-  <p><strong>Why keys must be immutable:</strong> the bucket was chosen from the key's value at insert time. Mutate the key afterward and it's filed under the wrong bucket forever — so Python only accepts hashable (immutable) keys: strings, numbers, tuples. Never lists (that's the LC 49 crash in §B.3).</p>
+  <h2>Hash tables — the library-shelf trick</h2>
+  <p>Half the lab says “use a hashmap, O(1) average”. Here is what those words actually mean, because you will be asked.</p>
+  <p><strong>The problem it solves:</strong> finding one book in an unsorted pile means checking every book — O(n) per search. A library fixes this without sorting anything: it <em>computes</em> each book’s shelf from its title. To find a book you redo that small computation and walk straight to the right shelf. No scanning.</p>
+  <p>A hash table is exactly that library. The <strong>hash function</strong> turns your key into a shelf number; the shelf is called a <strong>bucket</strong>. Two keys can land on the same shelf — a <strong>collision</strong> — and that is fine: the shelf just holds a short list you check quickly. When shelves get crowded, the table quietly rebuilds itself bigger (a <strong>resize</strong>) — occasionally expensive, cheap on average, which is rule 4 of §F.1 (amortized) making its first real appearance.</p>
+  <figure class="fig"><svg viewBox="0 0 640 210" role="img" aria-label="A hash function assigning keys to buckets, with one collision">
+<rect class="dg-box" x="20" y="30" width="104" height="30"/><text class="dg-t" x="72" y="49" text-anchor="middle">"apple"</text>
+<rect class="dg-box" x="20" y="90" width="104" height="30"/><text class="dg-t" x="72" y="109" text-anchor="middle">"banana"</text>
+<rect class="dg-box" x="20" y="150" width="104" height="30"/><text class="dg-t" x="72" y="169" text-anchor="middle">"cherry"</text>
+<rect class="dg-boxa" x="212" y="80" width="122" height="46"/><text class="dg-ta" x="273" y="100" text-anchor="middle">hash(key)</text><text class="dg-td" x="273" y="117" text-anchor="middle">→ slot number</text>
+<line class="dg-e" x1="124" y1="45" x2="212" y2="94"/>
+<line class="dg-e" x1="124" y1="105" x2="212" y2="103"/>
+<line class="dg-e" x1="124" y1="165" x2="212" y2="112"/>
+<text class="dg-td" x="452" y="32" text-anchor="end">0</text><rect class="dg-box" x="462" y="15" width="150" height="24"/>
+<text class="dg-td" x="452" y="62" text-anchor="end">1</text><rect class="dg-box" x="462" y="45" width="150" height="24"/>
+<text class="dg-td" x="452" y="92" text-anchor="end">2</text><rect class="dg-boxw" x="462" y="75" width="150" height="24"/><text class="dg-tw" x="537" y="91" text-anchor="middle">apple · cherry</text>
+<text class="dg-td" x="452" y="122" text-anchor="end">3</text><rect class="dg-box" x="462" y="105" width="150" height="24"/>
+<text class="dg-td" x="452" y="152" text-anchor="end">4</text><rect class="dg-box" x="462" y="135" width="150" height="24"/>
+<text class="dg-td" x="452" y="182" text-anchor="end">5</text><rect class="dg-box" x="462" y="165" width="150" height="24"/><text class="dg-t" x="537" y="181" text-anchor="middle">banana</text>
+<line class="dg-ea" x1="334" y1="93" x2="462" y2="87"/>
+<line class="dg-ea" x1="334" y1="110" x2="462" y2="177"/>
+</svg><figcaption>Lookup jumps straight to a computed slot. Bucket 2 shows a collision: two keys share the shelf, which then holds a short list — still fast, as long as collisions stay rare.</figcaption></figure>
+  <p><strong>Why every bound says “average”:</strong> a truly unlucky (or malicious) set of keys could all land on one shelf — then that shelf IS the unsorted pile again, and lookups degrade to O(n). Real inputs almost never do this, but the precise claim — the one to say in interviews — is <strong>“O(1) average, O(n) worst case”</strong>.</p>
+  <p><strong>Why keys must be immutable:</strong> the shelf was chosen from the key’s value at insert time. If you could change the key afterwards, the book would be filed under a shelf its new title no longer points to — lost forever. That is why Python accepts strings, numbers and tuples as keys, and refuses lists (you will hit this personally in §B.3).</p>
   <div class="tblwrap"><table class="tbl">
     <tr><th>Operation</th><th>list</th><th>set / dict</th></tr>
-    <tr><td><code class="ic">x in c</code></td><td class="m">O(n) scan</td><td class="m">O(1) avg</td></tr>
-    <tr><td>add / append</td><td class="m">O(1) amortized</td><td class="m">O(1) avg</td></tr>
-    <tr><td>remove by value</td><td class="m">O(n)</td><td class="m">O(1) avg</td></tr>
+    <tr><td><code class="ic">x in c</code></td><td class="m">O(n) — scans everything</td><td class="m">O(1) average</td></tr>
+    <tr><td>add / append</td><td class="m">O(1) amortized</td><td class="m">O(1) average</td></tr>
+    <tr><td>remove by value</td><td class="m">O(n)</td><td class="m">O(1) average</td></tr>
   </table></div>
-  <p>That first row is the most common beginner performance bug in existence: <code class="ic">if x in my_list</code> inside a loop is a quiet O(n²). One character of intent — building a set — fixes it.</p>
+  <p>That first row is the most common beginner performance bug in existence: <code class="ic">if x in my_list</code> inside a loop is a hidden n×n (rule 2 of §F.1) — the code is correct, passes small tests, and times out at scale. Building a set first fixes it with one line.</p>
   <div class="sec-foot"><button class="btn understood" data-sec="f-hash">Mark understood</button></div>
 </section>
 
 <section class="sec" id="f-py" data-nav="F.4 · Python idioms" data-group="Set 00 · Foundations">
   <p class="eyebrow"><span class="dim">§F.4</span> · SET 00 — FOUNDATIONS</p>
   <h2>The Python this lab is written in</h2>
-  <p><strong>Tuple assignment — the idiom the linked-list set lives on.</strong> Python evaluates the ENTIRE right side first, then assigns left to right. So this famous one-liner:</p>
+  <p>The lab’s code uses a handful of Python moves that read like magic until someone slows them down. Here they are, slowed down.</p>
+  <p><strong>1. Tuple assignment — the move the linked-list set lives on.</strong> The rule is simple: <em>Python finishes reading the ENTIRE right-hand side before it changes anything on the left.</em> So this famous one-liner:</p>
 <pre class="code"><code data-lang="python">cur.next, prev, cur = prev, cur, cur.next
-# is exactly equivalent to:
-old_next = cur.next     # right side captured FIRST
+# is exactly this, with the temp written out:
+old_next = cur.next     # the right side was captured FIRST
 cur.next = prev
 prev = cur
 cur = old_next</code></pre>
-  <p>No value is lost, because everything on the right was saved before anything on the left changed. In Java or JS you must write the temp yourself — and writing the statements in the wrong order there is the classic orphaned-list bug (§L.2).</p>
-  <p><strong>Aliasing vs copying — the backtracking bug factory.</strong> <code class="ic">b = a</code> makes two names for ONE list; mutating through either shows through both. <code class="ic">a[:]</code> makes a real copy. That's why every backtracking solution collects <code class="ic">path[:]</code>, never <code class="ic">path</code> (§K.7's #1 trap).</p>
-  <p><strong>The rest of the vocabulary, in one place:</strong> <code class="ic">enumerate(xs)</code> = index + value pairs · <code class="ic">zip(a, b)</code> = parallel walk · <code class="ic">d.get(k, 0)</code> = lookup with default · <code class="ic">d.setdefault(k, [])</code> = get-or-insert · <code class="ic">float('inf')</code> = a number bigger than everything · <code class="ic">//</code> = floor division (7 // 2 = 3) · <code class="ic">deque</code> = O(1) at both ends where <code class="ic">list.pop(0)</code> is O(n) · <code class="ic">heapq</code> = min-heap only, negate for max · <code class="ic">bisect_left</code> = the lower bound of §BS.3 · <code class="ic">is</code> = same object, <code class="ic">==</code> = equal value (Floyd and LCA need <code class="ic">is</code>).</p>
+  <p>Nothing is lost, because everything on the right was safely read before anything on the left changed. In Java or JavaScript you must write that temp yourself — and writing the three statements in the wrong order there is the classic lost-list bug (§L.2 shows the wreckage).</p>
+  <p><strong>2. Two names, one list — the aliasing trap.</strong> Assignment in Python copies the <em>arrow</em>, never the object. <code class="ic">b = a</code> gives you two names for one list; change it through either name and both “see” the change, because there is only one list to see. A real copy needs <code class="ic">a[:]</code>.</p>
+  <figure class="fig"><svg viewBox="0 0 640 170" role="img" aria-label="Aliasing versus copying a list">
+<rect class="dg-box" x="40" y="36" width="44" height="28"/><text class="dg-t" x="62" y="54" text-anchor="middle">a</text>
+<rect class="dg-box" x="40" y="104" width="44" height="28"/><text class="dg-t" x="62" y="122" text-anchor="middle">b</text>
+<rect class="dg-boxw" x="180" y="66" width="130" height="36"/><text class="dg-tw" x="245" y="88" text-anchor="middle">[1, 2, 3]</text>
+<line class="dg-ew" x1="84" y1="50" x2="180" y2="78"/>
+<line class="dg-ew" x1="84" y1="118" x2="180" y2="90"/>
+<text class="dg-tw" x="245" y="126" text-anchor="middle">b = a → two names, ONE list</text>
+<line class="dg-e" x1="340" y1="14" x2="340" y2="156" stroke-dasharray="4 4"/>
+<rect class="dg-box" x="380" y="36" width="44" height="28"/><text class="dg-t" x="402" y="54" text-anchor="middle">a</text>
+<rect class="dg-box" x="380" y="104" width="44" height="28"/><text class="dg-t" x="402" y="122" text-anchor="middle">c</text>
+<rect class="dg-box" x="490" y="30" width="130" height="36"/><text class="dg-t" x="555" y="52" text-anchor="middle">[1, 2, 3]</text>
+<rect class="dg-boxa" x="490" y="98" width="130" height="36"/><text class="dg-ta" x="555" y="120" text-anchor="middle">[1, 2, 3]</text>
+<line class="dg-e" x1="424" y1="50" x2="490" y2="48"/>
+<line class="dg-ea" x1="424" y1="118" x2="490" y2="116"/>
+<text class="dg-ta" x="555" y="152" text-anchor="middle">c = a[:] → a separate list</text>
+</svg><figcaption>Left: assignment copies the arrow — mutations through either name show through both. Right: a slice builds a genuinely new list. This is why backtracking collects path[:], never path (§K.7’s #1 bug).</figcaption></figure>
+  <p><strong>3. The rest of the vocabulary</strong> — skim now, return whenever a code block uses one:</p>
+  <div class="tblwrap"><table class="tbl">
+    <tr><th>Tool</th><th>What it does</th><th>Where the lab leans on it</th></tr>
+    <tr><td class="m">enumerate(xs)</td><td>walk index and value together</td><td>nearly every loop</td></tr>
+    <tr><td class="m">zip(a, b)</td><td>walk two sequences in parallel</td><td>comparing adjacent words (§GR.6)</td></tr>
+    <tr><td class="m">d.get(k, 0)</td><td>look up with a default — no crash if missing</td><td>every counting map</td></tr>
+    <tr><td class="m">d.setdefault(k, [])</td><td>“get it, or insert this then get it”</td><td>grouping (§B.3), tries (§U.5)</td></tr>
+    <tr><td class="m">float('inf')</td><td>a value bigger than every number</td><td>“best so far” seeds (Set 12)</td></tr>
+    <tr><td class="m">7 // 2 → 3</td><td>floor division; int(a/b) truncates toward zero instead</td><td>the calculator trap (§SR.5)</td></tr>
+    <tr><td class="m">deque</td><td>O(1) at BOTH ends; list.pop(0) is O(n)</td><td>BFS queues (Set 09)</td></tr>
+    <tr><td class="m">heapq</td><td>a min-heap; negate values to fake a max-heap</td><td>all of Set 07</td></tr>
+    <tr><td class="m">bisect_left</td><td>the “lower bound” of §BS.3, prebuilt</td><td>LIS (§X.3), weighted pick (§O.5)</td></tr>
+    <tr><td class="m">is vs ==</td><td>same OBJECT vs equal VALUE</td><td>Floyd (§L.5), LCA (§TR.5)</td></tr>
+  </table></div>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ One more famous trap, while we’re here</span>
+    <p><code class="ic">[[0] * n] * m</code> does NOT build a fresh m×n grid — the outer * copies the <em>arrow</em> m times (trap 2 above!), so all m “rows” are one shared row. Write <code class="ic">[[0] * n for _ in range(m)]</code>. You will meet this again, with consequences, in Set 17.</p>
+  </div>
   <div class="sec-foot"><button class="btn understood" data-sec="f-py">Mark understood</button></div>
 </section>
 
 <section class="sec" id="f-cons" data-nav="F.5 · Reading constraints" data-group="Set 00 · Foundations">
   <p class="eyebrow"><span class="dim">§F.5</span> · SET 00 — FOUNDATIONS</p>
   <h2>Reading constraints — the setter is talking to you</h2>
-  <p>The constraints block is not legal fine print; it's a hint about the intended solution. Your time budget is roughly 10⁸ operations, so the largest n tells you which complexities can possibly pass:</p>
+  <p>Every problem statement ends with limits like “n ≤ 100,000”. Beginners skim past them. Don’t — <strong>the limits quietly tell you which solution the author expects</strong>, and reading them takes ten seconds.</p>
+  <p><strong>The arithmetic behind it, once:</strong> your time budget is roughly 10⁸ steps (§F.1’s anchor number). An O(n²) idea at n = 100,000 costs 10¹⁰ steps — about 100 seconds — automatic rejection. So the largest allowed n filters the curves of §F.1’s chart down to the ones that fit the budget, and the biggest surviving shape is almost always the intended one:</p>
   <div class="tblwrap"><table class="tbl">
-    <tr><th>Constraint</th><th>Intended complexity</th><th>Usually means</th></tr>
-    <tr><td class="m">n ≤ 20</td><td class="m">O(2ⁿ) fine</td><td>backtracking / bitmask — exponential is EXPECTED</td></tr>
-    <tr><td class="m">n ≤ 500</td><td class="m">O(n³)</td><td>interval DP, Floyd-Warshall territory</td></tr>
-    <tr><td class="m">n ≤ 5,000</td><td class="m">O(n²)</td><td>quadratic DP, all-pairs of something</td></tr>
-    <tr><td class="m">n ≤ 10⁵–10⁶</td><td class="m">O(n log n) / O(n)</td><td>sort+sweep, heap, window, one-pass patterns</td></tr>
-    <tr><td class="m">values up to 10⁹</td><td class="m">—</td><td>never loop over VALUES (§D.1's pseudo-polynomial trap); binary search the answer instead</td></tr>
+    <tr><th>If the limit says…</th><th>…the setter expects</th><th>which usually means</th></tr>
+    <tr><td class="m">n ≤ 20</td><td class="m">O(2ⁿ) is fine</td><td>try everything — backtracking (Set 10); exponential is EXPECTED here</td></tr>
+    <tr><td class="m">n ≤ 500</td><td class="m">O(n³)</td><td>interval DP, all-triples work</td></tr>
+    <tr><td class="m">n ≤ 5,000</td><td class="m">O(n²)</td><td>quadratic DP, all-pairs work</td></tr>
+    <tr><td class="m">n ≤ 10⁵–10⁶</td><td class="m">O(n log n) or O(n)</td><td>sort + sweep, heap, window, one-pass patterns</td></tr>
+    <tr><td class="m">values up to 10⁹</td><td class="m">—</td><td>never loop over VALUES — loop over items, or binary-search the answer (Set 04); §D.1 names this trap “pseudo-polynomial”</td></tr>
   </table></div>
-  <p><strong>Two more messages hidden in constraints:</strong> tiny n with "return all…" means the output itself is exponential — no algorithm beats its own output size (§K.1). And a guarantee like "timestamps are strictly increasing" is a gift: it's manufactured sortedness you're expected to exploit (§V.4).</p>
+  <p><strong>Two more messages hiding in constraints:</strong></p>
+  <ul>
+    <li>A tiny n combined with “return ALL…” means the <em>answer itself</em> is huge (2ⁿ subsets, n! orderings) — no algorithm can beat the size of its own output, so exponential is not a failure there, it’s the job (§K.1).</li>
+    <li>A guarantee like “timestamps are strictly increasing” is a gift: it is sortedness you didn’t have to pay for, and the intended solution exploits it (§V.4 is built on exactly this).</li>
+  </ul>
+  <p>Habit to build from day one: read the constraints <em>before</em> thinking about approaches, and say the budget out loud — “n is 10⁵, so I need O(n log n) or better.” It steers you toward the right pattern and it is, verbatim, step 2 of the interview script (§guide-talk).</p>
   <div class="sec-foot"><button class="btn understood" data-sec="f-cons">Mark understood</button></div>
 </section>
 
