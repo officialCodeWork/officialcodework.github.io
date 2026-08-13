@@ -529,7 +529,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <span class="brand-name">DSA<span class="tick">_</span>PATTERN<span class="tick">_</span>LAB</span>
     <span class="brand-sub">deliberate-practice notes</span>
   </div>
-  <span class="setchip">ATLAS COMPLETE · 25/25 PATTERNS</span>
+  <span class="setchip">ATLAS COMPLETE · 26/26 PATTERNS</span>
   <div class="progress">
     <span class="progress-label"><span>understood</span><span id="progressCount">0 / 0</span></span>
     <div class="progress-bar"><i id="progressFill"></i></div>
@@ -545,8 +545,8 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   <h1>DSA Pattern Lab<span class="cursor">▍</span></h1>
   <p>Active-recall study notes, one pattern set at a time. Solutions are folded shut — attempt on paper first, then reveal. Complexity claims are folded separately — re-derive before you peek. Your journal and practice log live in this page and persist in this browser.</p>
   <div class="setrow">
-    <span class="setchip">16 SETS · 25/25 PATTERNS · ATLAS COMPLETE</span>
-    <span class="setchip">STUDY ORDER: SET 00 → BASELINE → SET 01 → 02 … 15</span>
+    <span class="setchip">17 SETS · 26/26 PATTERNS · ATLAS COMPLETE</span>
+    <span class="setchip">STUDY ORDER: SET 00 → BASELINE → SET 01 → 02 … 16</span>
     <a class="setchip" href="design/">DESIGN LAB · HLD &amp; LLD →</a>
   </div>
 </div>
@@ -586,6 +586,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Heap / top-K</strong></td><td>Fully sorting when you only need the extremes</td><td>Kth Largest · Merge K Lists · Find Median (two heaps)</td><td class="set"><span class="done">07 ✓</span></td></tr>
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Intervals</strong></td><td>Pairwise overlap checks → sort once, sweep once</td><td>Merge Intervals · Meeting Rooms II · Non-overlapping</td><td class="set"><span class="done">08 ✓</span></td></tr>
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Graphs — BFS / DFS</strong></td><td>Revisiting states — the visited set IS the pattern</td><td>Number of Islands · Clone Graph · Rotting Oranges</td><td class="set"><span class="done">09 ✓</span></td></tr>
+    <tr><td><span class="badge badge--s">S</span></td><td><strong>Strings residue</strong></td><td>Palindromic substrings via centers; parsing where spec discipline IS the test</td><td>Longest Palindromic Substring · atoi · Calculator II · Text Justification</td><td class="set"><span class="done">16 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Topological sort</strong></td><td>Dependency order on a DAG; cycle = impossible</td><td>Course Schedule I/II · Alien Dictionary</td><td class="set"><span class="done">09 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Backtracking</strong></td><td>Enumerate choices, undo, prune</td><td>Subsets · Combination Sum · Word Search · N-Queens</td><td class="set"><span class="done">10 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Union-Find</strong></td><td>Incremental connectivity without re-traversal</td><td>Connected Components · Redundant Connection · Accounts Merge</td><td class="set"><span class="done">11 ✓</span></td></tr>
@@ -629,6 +630,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <div class="dtree-q"><b>10.</b> "Return ALL …" (subsets, arrangements, boards)? <span class="goto">→ backtracking (Set 10)</span> — but "count ways / best value" with overlapping subproblems <span class="goto">→ DP (Sets 12–13)</span></div>
     <div class="dtree-q"><b>11.</b> "Implement a class where every op is O(1)"? <span class="goto">→ design composition (Set 14)</span></div>
     <div class="dtree-q"><b>12.</b> Exact pairing structure, powers, uniform sampling? <span class="goto">→ bits &amp; math (Set 15)</span></div>
+    <div class="dtree-q"><b>13.</b> Palindromic <b>SUBSTRING</b>? <span class="goto">→ expand around 2n−1 centers (Set 16)</span> · messy spec with no visible trick (atoi, calculators, justification)? <span class="goto">→ parsing discipline (Set 16) — carefulness IS the test</span></div>
   </div>
   <div class="callout callout--warn">
     <span class="callout-label">⚠ Routing is a hypothesis, not a verdict</span>
@@ -5778,6 +5780,285 @@ class Solution:
   <div class="sec-foot"><button class="btn understood" data-sec="oe-traps">Mark understood</button></div>
 </section>
 
+<!-- ################ SET 16 — STRINGS RESIDUE ################ -->
+
+<section class="sec" id="sr-theory" data-nav="SR.1 · Theory" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.1</span> · SET 16 — STRINGS RESIDUE</p>
+  <h2>Theory — two halves, honestly labeled</h2>
+  <p>Most "string questions" are pattern questions wearing string clothing — windows, stacks, tries, subsequence grids — and this lab already routes them there. What remains is exactly two things, and they could not be more different:</p>
+  <ul>
+    <li><strong>Expand-around-center</strong> — a real technique with a real redundancy to kill (palindromic <em>substrings</em>).</li>
+    <li><strong>Parsing / simulation</strong> — a category with <strong>no redundancy and no trick</strong>. The brute force IS the solution; what interviews grade is spec discipline. Recognizing that there is nothing to recognize — and saying so — is itself the senior move.</li>
+  </ul>
+  <p><strong>Half 1 — the redundancy expand-around-center kills:</strong> the brute force checks all O(n²) substrings with an O(n) palindrome scan each → O(n³), re-comparing the same interior characters for every enclosing candidate. The fix rests on an identity:</p>
+<pre class="code"><code data-lang="none">every palindrome ↔ exactly one (center, radius) pair
+centers: n characters (odd lengths) + n−1 gaps (even lengths) = 2n−1</code></pre>
+  <p>Expanding outward from a center makes verification <em>incremental</em>: <code class="ic">pal(l−1, r+1) = pal(l, r) AND s[l−1] == s[r+1]</code> — one comparison per growth step instead of re-scanning the interior. The interior's verdict is carried, never recomputed — the same compute-once-reuse economy as §1.1's prefix sums, applied to palindromicity.</p>
+  <div class="callout">
+    <span class="callout-label">The invariant</span>
+    <p>Inside the expansion loop, <code class="ic">s[l..r]</code> is always a verified palindrome; the loop exit is the first proof of failure, so <code class="ic">s[l+1..r−1]</code> is the maximal palindrome at this center. Enumerate all 2n−1 centers and the bijection guarantees nothing is missed and nothing is double-counted.</p>
+  </div>
+  <p><strong>Half 2 — the parsing "template":</strong> translate the spec into an ordered checklist (whitespace → sign → digits → clamp), implement it as a small state machine, then run the edge-case ritual. The one guarantee: parsing is a single pass, <strong>O(n) always</strong> — if your parse loop is quadratic, you're re-scanning or re-concatenating (see traps).</p>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ Hidden requirements</span>
+    <p>(1) Expand-around-center needs <strong>contiguity</strong> — palindromic <em>subsequence</em> drops characters and belongs to §X.5's interval DP; the sibling confusion is the most common wrong turn in this territory. (2) Parsing needs a <strong>frozen spec</strong>: signs, whitespace, overflow policy, rounding direction — every one is a clarifying question (§guide-talk step 1 at its highest stakes), because the spec is the problem. (3) Manacher's O(n) palindrome algorithm exists; it is trap-list tier — name it, never code it.</p>
+  </div>
+  <p><strong>Complexity tells:</strong> centers ⇒ <strong>O(n²) worst</strong> ("aaaa…" expands every center to a boundary) but with early exit on real text — say "quadratic worst-case, typically far better". Parsing ⇒ O(n), one pass, O(1) or O(n) space depending on output. Constraint smell: palindromic-substring problems cap n around 10³ — the setter telling you O(n²) is intended (§F.5).</p>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-a" data-nav="SR.2 · A — Expand centers" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.2</span> · TYPE A · THE MISSING TECHNIQUE</p>
+  <h2>Longest palindromic substring</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 5 · Longest Palindromic Substring</span>
+    <span class="prob-text">Return the longest contiguous palindrome in s. One of the most-asked questions in existence.</span>
+  </div>
+  <p><strong>The three-rung ladder (walk it in the interview):</strong> brute force O(n³) → DP table dp[i][j] = "s[i..j] is a palindrome", O(n²) time <em>and</em> O(n²) space → expand-around-center: same O(n²) time, <strong>O(1) space</strong>, and much faster on real text because most centers die after one comparison. The DP table buys nothing here — knowing <em>why</em> (you only ever need the verdicts along a center's ray, not the whole triangle) is the senior answer.</p>
+  <p><strong>The derivation:</strong> enumerate every center — each character (odd lengths) and each gap between characters (even lengths). From a center, grow while the ends match; the invariant (§SR.1) makes each growth step a single comparison. Track the best window seen.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def longestPalindrome(s):
+    best_l, best_r = 0, 0              # inclusive bounds of the best
+    def expand(l, r):
+        nonlocal best_l, best_r
+        while l &gt;= 0 and r &lt; len(s) and s[l] == s[r]:
+            l -= 1
+            r += 1
+        if (r - 1) - (l + 1) &gt; best_r - best_l:
+            best_l, best_r = l + 1, r - 1   # undo the failed step
+    for c in range(len(s)):
+        expand(c, c)                   # odd length: centered on a char
+        expand(c, c + 1)               # even length: centered on a gap
+    return s[best_l:best_r + 1]</code></pre>
+      <p>The +1/−1 dance after the loop is the off-by-one everyone writes wrong once: the loop exits having <em>already overstepped</em>, so the palindrome is one step back on both sides.</p>
+    </div>
+  </details>
+  <details class="reveal reveal--check"><summary>Check yourself: "babad" — which centers produce "bab" and "aba", and what does the gap-center between the two a's yield?</summary><div class="reveal-body"><p>"bab" comes from the char-center at index 1 (the first a's neighbors b…b match); "aba" from the char-center at index 2. Every gap center dies immediately — "babad" has no even-length palindrome, which is why the <code class="ic">expand(c, c+1)</code> calls all exit on the first comparison.</p></div></details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>2n−1 centers × O(n) worst expansion → <strong>O(n²)</strong> time, <strong>O(1)</strong> space. The worst case needs nested palindromes ("aaaa" — every center runs to a wall); on strings without them, most expansions are O(1) and the practical cost is near-linear. Say both halves of that sentence.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-a">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-b" data-nav="SR.3 · B — Count palindromes" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.3</span> · TYPE B</p>
+  <h2>Counting with the same centers</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 647 · Palindromic Substrings</span>
+    <span class="prob-text">Count how many substrings of s are palindromes (each position pair counts separately).</span>
+  </div>
+  <p><strong>The move:</strong> same 2n−1 centers, different aggregation — <em>count every successful expansion step instead of keeping the max</em>. Each step outward is one distinct palindrome, because palindromes correspond one-to-one with (center, radius) pairs: same center → different radii, different centers → different palindromes. No double-count is possible <em>by the bijection</em>, not by luck.</p>
+  <p>This is the max-vs-count switch you've seen before (§S.7: "max forgives, sum doesn't") — except here the bijection makes counting exactly as safe as maxing.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def countSubstrings(s):
+    count = 0
+    for center in range(2 * len(s) - 1):
+        l = center // 2
+        r = l + center % 2             # even center-index = char, odd = gap
+        while l &gt;= 0 and r &lt; len(s) and s[l] == s[r]:
+            count += 1                 # each expansion step IS one palindrome
+            l -= 1
+            r += 1
+    return count</code></pre>
+      <p>The <code class="ic">center // 2, + center % 2</code> encoding walks chars and gaps in one loop — worth knowing as the compact form of Type A's two calls.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p><strong>O(n²)</strong> worst, O(1) space — and the output itself can be Θ(n²) ("aaa…" has n(n+1)/2 palindromic substrings), so counting-by-enumeration is at the floor anyway. Trace "aaa" → 6 by hand once; it cements the step-equals-palindrome claim.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-b">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-c" data-nav="SR.4 · C — atoi discipline" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.4</span> · TYPE C · THE PARSING ARCHETYPE</p>
+  <h2>String to integer — the spec is the problem</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 8 · String to Integer (atoi)</span>
+    <span class="prob-text">Parse an integer: skip leading spaces, optional single sign, digits until a non-digit, clamp to 32-bit range.</span>
+  </div>
+  <p><strong>Say it out loud first:</strong> "there's no algorithmic trick here — the test is whether I cover the spec." Then turn the spec into an ordered checklist and implement it as a straight-line state machine: <strong>whitespace* → sign? → digit* → clamp</strong>. Every interview failure on this problem is a skipped spec line, not a wrong algorithm.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first — write the checklist before the code</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def myAtoi(s):
+    INT_MAX, INT_MIN = 2**31 - 1, -2**31
+    i, n = 0, len(s)
+    while i &lt; n and s[i] == ' ':       # 1. spaces only — not all whitespace
+        i += 1
+    sign = 1
+    if i &lt; n and s[i] in '+-':         # 2. at most ONE sign
+        sign = -1 if s[i] == '-' else 1
+        i += 1
+    num = 0
+    while i &lt; n and s[i].isdigit():    # 3. digits until first non-digit
+        num = num * 10 + (ord(s[i]) - 48)
+        if sign * num &lt;= INT_MIN:      # 4. clamp DURING accumulation
+            return INT_MIN
+        if sign * num &gt;= INT_MAX:
+            return INT_MAX
+        i += 1
+    return sign * num</code></pre>
+      <p>Edge ritual for this spec: <code class="ic">"+-12"</code> → 0 (second sign is a terminator) · <code class="ic">"  42abc"</code> → 42 · <code class="ic">".5"</code> → 0 · <code class="ic">"-91283472332"</code> → INT_MIN. Run all four before declaring done.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>One pass, O(1) per character → <strong>O(n)</strong>, O(1) space. The interesting bound is the clamp: in Java/C++ the check must run <em>before</em> the multiply (<code class="ic">num &gt; (MAX − digit) / 10</code>) or the int overflows before you test it; Python's unbounded ints let you check after — but the clamp itself is still mandatory. Same claim-precision family as §D.8's overflow trap.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-c">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-d" data-nav="SR.5 · D — Calculator" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.5</span> · TYPE D</p>
+  <h2>Expression evaluation — precedence as stack discipline</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 227 · Basic Calculator II</span>
+    <span class="prob-text">Evaluate "3+5/2"-style expressions with + − * / and spaces, no parentheses. Integer division truncates toward zero.</span>
+  </div>
+  <p><strong>The one idea:</strong> precedence = <em>which operators may wait</em>. Addition and subtraction commute with waiting — push each operand with its sign and sum at the end (associativity makes deferral safe). Multiplication and division bind only their immediate left operand — they must fire <strong>now</strong>, against the stack top. That single distinction, encoded as §S's stack, is the whole algorithm.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def calculate(s):
+    stack = []
+    num, op = 0, '+'
+    for i, ch in enumerate(s):
+        if ch.isdigit():
+            num = num * 10 + int(ch)
+        if ch in '+-*/' or i == len(s) - 1:   # flush on operator or end
+            if op == '+':
+                stack.append(num)
+            elif op == '-':
+                stack.append(-num)
+            elif op == '*':
+                stack.append(stack.pop() * num)
+            else:
+                stack.append(int(stack.pop() / num))  # truncate toward ZERO
+            num, op = 0, ch
+    return sum(stack)</code></pre>
+      <p><code class="ic">int(a / b)</code>, not <code class="ic">a // b</code>: Python's floor division sends −3/2 to −2, but the spec truncates to −1. This is the rare corner where Java is <em>easier</em> (its int division already truncates); JS needs <code class="ic">Math.trunc</code>. Trace "14-3*2" → 8 to see the deferred −3 get consumed by the *.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>One pass; each operand pushed once and popped at most once by a */ — the §2.2 charge yet again → <strong>O(n)</strong> time, O(n) stack worst case ("1+1+1+…"). LC 224 adds parentheses: push the running (sum, sign) context on '(' — same machine, one more state.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-d">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-e" data-nav="SR.6 · E — Justification ★" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.6</span> · TYPE E · THE BOSS</p>
+  <h2>Text justification — pure spec, maximum discipline</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 68 · Text Justification (hard)</span>
+    <span class="prob-text">Pack words greedily into lines of maxWidth; fully justify each line; last line and one-word lines are left-justified.</span>
+  </div>
+  <p><strong>Why it's the boss:</strong> zero algorithmic content, maximum spec surface — it's hard <em>because</em> every sub-rule is a place to slip. Decompose into three phases and conquer each in isolation:</p>
+  <ol>
+    <li><strong>Fit:</strong> a line takes the next word while <code class="ic">chars + min-spaces + len(word) ≤ maxWidth</code>, where min-spaces = current word count (each existing word will need at least one gap if the new word joins). The greedy fill isn't an optimization choice — the spec mandates "pack as many as possible".</li>
+    <li><strong>Distribute:</strong> spaces = maxWidth − chars, gaps = words − 1; <code class="ic">divmod(spaces, gaps)</code> gives every gap <code class="ic">base</code>, and the first <code class="ic">extra</code> gaps one more — the spec's "left gaps get more".</li>
+    <li><strong>The two special lines:</strong> a single-word line and the final line are left-justified, padded right. Both are separate branches; forgetting either fails hidden tests.</li>
+  </ol>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first — phase by phase</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def fullJustify(words, maxWidth):
+    res, line, length = [], [], 0      # length = chars only, no spaces
+    for w in words:
+        if length + len(line) + len(w) &gt; maxWidth:
+            spaces = maxWidth - length
+            gaps = len(line) - 1
+            if gaps == 0:
+                res.append(line[0] + ' ' * spaces)
+            else:
+                base, extra = divmod(spaces, gaps)
+                out = ''
+                for i, word in enumerate(line[:-1]):
+                    out += word + ' ' * (base + (1 if i &lt; extra else 0))
+                res.append(out + line[-1])
+            line, length = [], 0
+        line.append(w)
+        length += len(w)
+    res.append(' '.join(line).ljust(maxWidth))   # last line: left-justified
+    return res</code></pre>
+      <p>The fit test's <code class="ic">len(line)</code> term is the subtle line: it's the minimum spaces the line will need <em>if w joins</em> (w becomes word number len(line)+1, creating len(line) gaps). Derive it, don't memorize it.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Each word is placed once and emitted once → <strong>O(total characters)</strong> time and output space. Nothing clever — which is the point: when this feels <em>calm</em> instead of fiddly, the parsing half of the set is yours. (The optimization sibling — minimize raggedness — is a classic DP, LC-adjacent but rarely asked; know it exists.)</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-e">Mark understood</button></div>
+</section>
+
+<section class="sec" id="sr-traps" data-nav="SR.7 · Traps &amp; drill" data-group="Set 16 · Strings residue">
+  <p class="eyebrow"><span class="dim">§SR.7</span> · BEFORE YOU SUBMIT + INTERROGATION</p>
+  <h2>Traps, signals &amp; interrogation</h2>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span>SUBSTRING vs SUBSEQUENCE, again — expand-around-center cannot drop characters; LC 516 is §X.5's interval DP</span></label></li>
+    <li><label><input type="checkbox"><span>Odd centers only — "abba" has a gap center; 2n−1 centers or even-length palindromes vanish</span></label></li>
+    <li><label><input type="checkbox"><span>Slicing inside the expand loop (<code class="ic">s[l:r+1] == s[l:r+1][::-1]</code>) — O(n) per step, quietly back to O(n³)</span></label></li>
+    <li><label><input type="checkbox"><span>atoi: clamped after building in Java/C++ — the int overflowed before the test; pre-check against (MAX − digit) / 10</span></label></li>
+    <li><label><input type="checkbox"><span>Calculator: <code class="ic">-3 // 2 = -2</code> — Python floor ≠ spec's truncation; use int(a/b); JS needs Math.trunc; Java ints truncate natively</span></label></li>
+    <li><label><input type="checkbox"><span>Justification: extras to the RIGHT gaps, or the single-word / last-line branches missing — three separate hidden-test failures</span></label></li>
+    <li><label><input type="checkbox"><span>String += in a loop — immutable strings can make this quietly quadratic; build a list, join once (§F.4)</span></label></li>
+    <li><label><input type="checkbox"><span>Hunting for a clever pattern in a parsing problem — there isn't one; the checklist is the solution, say so and start</span></label></li>
+  </ul>
+  <div class="callout">
+    <span class="callout-label">Aware-only: rolling hash (Rabin–Karp)</span>
+    <p>Hash every window of a pattern's length in O(1) each after O(n) prep (treat the window as a number in some base; slide by subtracting the outgoing digit's contribution and appending the incoming one — the same enter/leave arithmetic as §2.3's fixed window). Answers "substring equality" probabilistically; collisions demand verification. Interview posture: name it for LC 28/187-shaped problems, code the simple loop unless explicitly pushed — same tier as Manacher and KMP on the atlas trap list.</p>
+  </div>
+  <h3>Signals → pattern (added to the drill deck in §3.2)</h3>
+<pre class="code"><code data-lang="none">"longest / count palindromic SUBSTRING"      → expand around 2n−1 centers, O(1) space
+"palindromic SUBSEQUENCE"                    → interval DP (Set 13) — the sibling, not this
+"implement atoi / parse this format"         → spec → checklist → state machine; no trick exists
+"evaluate an expression, no parentheses"     → defer +/− on a stack, fire * and / immediately
+"format / justify / render text by rules"    → greedy fit + divmod distribution + special-case lines</code></pre>
+  <h3>Interrogation — answer in your journal</h3>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">SR1</span><p class="jq-text">Prove the palindrome ↔ (center, radius) bijection and count the centers. Which input drives expand-around-center to its O(n²) worst case, and why is the O(n²) DP table strictly worse here despite equal time?</p></div>
+    <textarea class="journal" data-jkey="srq1" placeholder="Bijection + worst case + the space argument…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> A palindrome is determined by where its middle sits and how far it reaches.</p><p><strong>Sketch:</strong> n char-centers (odd lengths) + n−1 gap-centers (even) = 2n−1; a palindrome's middle is unique, so (center, radius) determines it and vice versa. "aaaa…" makes every expansion run to a boundary → Σ ≈ n²/2 comparisons. The DP table spends Θ(n²) memory storing verdicts for every (i, j) — but only verdicts along each center's ray are ever needed, and the expansion carries them in O(1).</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">SR2</span><p class="jq-text">LC 647: prove each successful expansion step corresponds to exactly one distinct palindrome — including why no two centers can claim the same one. Trace "aaa" to 6.</p></div>
+    <textarea class="journal" data-jkey="srq2" placeholder="Uniqueness + the trace…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Two palindromes with the same center differ in radius; with different centers they differ, period.</p><p><strong>Sketch:</strong> Within a center, each step grows the radius → new substring each time. Across centers, the bijection (SR1) forbids overlap: a substring has one middle. "aaa": char-centers give 1 + 2 + 1 (the middle one reaches radius 1: "a", "aaa"), gap-centers give 1 + 1 ("aa" twice) → 6.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">SR3</span><p class="jq-text">atoi: derive the overflow-safe clamp for a fixed-width language (why must the check precede the multiply?). Trace "  -91283472332" and "+-12", and state what "spaces only" excludes.</p></div>
+    <textarea class="journal" data-jkey="srq3" placeholder="Clamp derivation + both traces…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Once num*10+digit has overflowed, no later test can see it.</p><p><strong>Sketch:</strong> In Java/C++, check <code class="ic">num &gt; (INT_MAX − digit) / 10</code> BEFORE the multiply — after it, the value has already wrapped. Python's unbounded ints allow check-after, but the clamp is still mandatory. "  -91283472332" → below INT_MIN → clamp to −2³¹. "+-12": the sign branch consumes '+', then '−' is a non-digit terminator → 0. "Spaces only" excludes tabs and newlines — the spec says ' ', not isspace().</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">SR4</span><p class="jq-text">Calculator: prove why + and − may be deferred but * and / must fire immediately (name the algebraic properties). Trace "14-3*2", and show the concrete input where floor division betrays you.</p></div>
+    <textarea class="journal" data-jkey="srq4" placeholder="The deferral argument + traces…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Which operators still give the right answer if you apply them at the very end?</p><p><strong>Sketch:</strong> A sum of signed terms is associative and commutative — deferring +/− to one final sum is safe. * and / bind only their immediate left operand; deferring them would lose which operand they own. "14-3*2": push 14, push −3; '*' pops −3, pushes −6; sum = 8. Floor betrayal: "7-6/4" — truncation gives 7−1 = 6; Python's −6//4… the deferred form computes int(6/4)=1 on the positive operand, but "0-3/2" style: int(−3/2) = −1 vs −3//2 = −2 — one off, silently.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">SR5</span><p class="jq-text">Justification: derive the fit test length + len(line) + len(w) ≤ maxWidth from "one space minimum per gap"; prove divmod puts the extra spaces in the leftmost gaps; list the two special-case lines and what each emits.</p></div>
+    <textarea class="journal" data-jkey="srq5" placeholder="Fit derivation + distribution proof + specials…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> If w joins, how many gaps must the line contain at minimum?</p><p><strong>Sketch:</strong> With len(line) words present, adding w creates len(line) gaps of ≥ 1 space; chars + len(line) + len(w) is therefore the minimum width the line would need. divmod(spaces, gaps) = (base, extra); the loop grants base+1 to gaps with index i &lt; extra — indices run left to right, so extras land leftmost by construction. Specials: gaps == 0 → word + right-padding; the final line → ' '.join + ljust — both left-justified per spec.</p></div></details>
+  </div>
+  <div class="sec-foot"><button class="btn understood" data-sec="sr-traps">Mark understood</button></div>
+</section>
+
 <!-- ================= LADDER ================= -->
 <section class="sec" id="ladder-sec" data-nav="3.5 · Practice ladder" data-group="Drills">
   <p class="eyebrow"><span class="dim">§3.5</span> · RUN THE FULL PROTOCOL ON EACH</p>
@@ -6152,7 +6433,12 @@ class Solution:
     { q: '"cache evicting by recency"', a: 'hashmap + DLL with sentinels — a read IS a use' },
     { q: '"evict by frequency, ties by recency"', a: 'per-frequency LRU buckets + min_freq pointer (no search)' },
     { q: '"store versions, read the latest ≤ t"', a: 'append-only per key + bisect_right − 1' },
-    { q: '"queue from stacks / stack from queues"', a: 'two containers — each element pays for its two moves' }
+    { q: '"queue from stacks / stack from queues"', a: 'two containers — each element pays for its two moves' },
+    { q: '"longest / count palindromic SUBSTRING"', a: 'expand around 2n−1 centers — O(n²) worst, O(1) space' },
+    { q: '"palindromic SUBSEQUENCE"', a: 'interval DP (Set 13) — the sibling, NOT expand-around-center' },
+    { q: '"implement atoi / parse this format"', a: 'spec → checklist → state machine — no trick exists, say so' },
+    { q: '"evaluate an expression, no parentheses"', a: 'defer +/− as signed pushes, fire * and / immediately' },
+    { q: '"format / justify / render text by rules"', a: 'greedy fit + divmod distribution + the two special lines' }
   ];
   var queue = [], flipped = false, firstTry = 0, seenCount = 0, missedNow = {};
   var quizOn = false, quizAnswered = false, quizRight = 0, quizSeen = 0;
@@ -6409,7 +6695,14 @@ class Solution:
     { set: '15', lc: 215, name: 'Kth Largest (quickselect round)', focus: 'derive the 4n expected series' },
     { set: '15', lc: 528, name: 'Random Pick with Weight', focus: 'prefix + lower bound + the uniformity proof' },
     { set: '15', lc: 382, name: 'Linked List Random Node', focus: 'reservoir — run the 1/i induction' },
-    { set: '15', lc: 239, name: 'Sliding Window Maximum', focus: 'boss fight — two discard proofs, one deque' }
+    { set: '15', lc: 239, name: 'Sliding Window Maximum', focus: 'boss fight — two discard proofs, one deque' },
+    { set: '16', lc: 125, name: 'Valid Palindrome', focus: 'warm-up — two pointers meet in the middle' },
+    { set: '16', lc: 680, name: 'Valid Palindrome II', focus: 'one mismatch, two branches — try both skips' },
+    { set: '16', lc: 5, name: 'Longest Palindromic Substring', focus: 'the missing technique — 2n−1 centers, O(1) space' },
+    { set: '16', lc: 647, name: 'Palindromic Substrings', focus: 'same centers, count every expansion step' },
+    { set: '16', lc: 8, name: 'String to Integer (atoi)', focus: 'the parsing archetype — checklist before code' },
+    { set: '16', lc: 227, name: 'Basic Calculator II', focus: 'defer +/−, fire */ — and int(a/b), not //' },
+    { set: '16', lc: 68, name: 'Text Justification', focus: 'boss fight — fit, distribute, two special lines' }
   ];
   var SET_LABELS = {
     '01': 'Set 01 · Sliding window & prefix sum',
@@ -6427,7 +6720,8 @@ class Solution:
     '12': 'Set 12 · DP I',
     '13': 'Set 13 · DP II & III',
     '14': 'Set 14 · Design data structures',
-    '15': 'Set 15 · Odds & ends'
+    '15': 'Set 15 · Odds & ends',
+    '16': 'Set 16 · Strings residue'
   };
   function addDays(iso, d) {
     var dt = new Date(iso + 'T12:00:00');
