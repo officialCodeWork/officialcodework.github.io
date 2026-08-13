@@ -529,7 +529,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <span class="brand-name">DSA<span class="tick">_</span>PATTERN<span class="tick">_</span>LAB</span>
     <span class="brand-sub">deliberate-practice notes</span>
   </div>
-  <span class="setchip">ATLAS COMPLETE · 26/26 PATTERNS</span>
+  <span class="setchip">ATLAS COMPLETE · 27/27 PATTERNS</span>
   <div class="progress">
     <span class="progress-label"><span>understood</span><span id="progressCount">0 / 0</span></span>
     <div class="progress-bar"><i id="progressFill"></i></div>
@@ -545,8 +545,8 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   <h1>DSA Pattern Lab<span class="cursor">▍</span></h1>
   <p>Active-recall study notes, one pattern set at a time. Solutions are folded shut — attempt on paper first, then reveal. Complexity claims are folded separately — re-derive before you peek. Your journal and practice log live in this page and persist in this browser.</p>
   <div class="setrow">
-    <span class="setchip">17 SETS · 26/26 PATTERNS · ATLAS COMPLETE</span>
-    <span class="setchip">STUDY ORDER: SET 00 → BASELINE → SET 01 → 02 … 16</span>
+    <span class="setchip">18 SETS · 27/27 PATTERNS · ATLAS COMPLETE</span>
+    <span class="setchip">STUDY ORDER: SET 00 → BASELINE → SET 01 → 02 … 17</span>
     <a class="setchip" href="design/">DESIGN LAB · HLD &amp; LLD →</a>
   </div>
 </div>
@@ -587,6 +587,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Intervals</strong></td><td>Pairwise overlap checks → sort once, sweep once</td><td>Merge Intervals · Meeting Rooms II · Non-overlapping</td><td class="set"><span class="done">08 ✓</span></td></tr>
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Graphs — BFS / DFS</strong></td><td>Revisiting states — the visited set IS the pattern</td><td>Number of Islands · Clone Graph · Rotting Oranges</td><td class="set"><span class="done">09 ✓</span></td></tr>
     <tr><td><span class="badge badge--s">S</span></td><td><strong>Strings residue</strong></td><td>Palindromic substrings via centers; parsing where spec discipline IS the test</td><td>Longest Palindromic Substring · atoi · Calculator II · Text Justification</td><td class="set"><span class="done">16 ✓</span></td></tr>
+    <tr><td><span class="badge badge--a">A</span></td><td><strong>Matrix moves</strong></td><td>Index identities + in-place state — transform without the O(mn) copy</td><td>Rotate Image · Spiral Matrix · Set Zeroes · Search 2D II</td><td class="set"><span class="done">17 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Topological sort</strong></td><td>Dependency order on a DAG; cycle = impossible</td><td>Course Schedule I/II · Alien Dictionary</td><td class="set"><span class="done">09 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Backtracking</strong></td><td>Enumerate choices, undo, prune</td><td>Subsets · Combination Sum · Word Search · N-Queens</td><td class="set"><span class="done">10 ✓</span></td></tr>
     <tr><td><span class="badge badge--a">A</span></td><td><strong>Union-Find</strong></td><td>Incremental connectivity without re-traversal</td><td>Connected Components · Redundant Connection · Accounts Merge</td><td class="set"><span class="done">11 ✓</span></td></tr>
@@ -631,6 +632,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <div class="dtree-q"><b>11.</b> "Implement a class where every op is O(1)"? <span class="goto">→ design composition (Set 14)</span></div>
     <div class="dtree-q"><b>12.</b> Exact pairing structure, powers, uniform sampling? <span class="goto">→ bits &amp; math (Set 15)</span></div>
     <div class="dtree-q"><b>13.</b> Palindromic <b>SUBSTRING</b>? <span class="goto">→ expand around 2n−1 centers (Set 16)</span> · messy spec with no visible trick (atoi, calculators, justification)? <span class="goto">→ parsing discipline (Set 16) — carefulness IS the test</span></div>
+    <div class="dtree-q"><b>14.</b> A <b>matrix</b> to transform in place, walk in a special order, or update simultaneously? <span class="goto">→ index identities + boundary pointers + bit-packed state (Set 17)</span> · sorted by rows AND columns <span class="goto">→ staircase from a corner</span></div>
   </div>
   <div class="callout callout--warn">
     <span class="callout-label">⚠ Routing is a hypothesis, not a verdict</span>
@@ -6059,6 +6061,327 @@ centers: n characters (odd lengths) + n−1 gaps (even lengths) = 2n−1</code><
   <div class="sec-foot"><button class="btn understood" data-sec="sr-traps">Mark understood</button></div>
 </section>
 
+<!-- ################ SET 17 — MATRIX MOVES ################ -->
+
+<section class="sec" id="mx-theory" data-nav="M.1 · Theory" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.1</span> · SET 17 — MATRIX MOVES</p>
+  <h2>Theory — matrices are index algebra</h2>
+  <p><strong>Redundancy it kills:</strong> the O(mn) auxiliary copy. The brute force for almost every matrix transform allocates a second matrix, computes each cell's destination, and copies — paying full extra memory to represent what is really a <strong>relabeling of indices</strong>. When the relabeling has clean algebra, the transform happens in place; when the walk has clean geometry, four boundary pointers replace a visited matrix. Time stays O(mn) either way (you must touch every cell); this set's entire game is <strong>space: O(mn) → O(1)</strong>.</p>
+  <p><strong>The two sub-skills:</strong></p>
+  <ul>
+    <li><strong>Index identities</strong> — transpose: (r, c) → (c, r); horizontal reflect: (r, c) → (r, n−1−c); 90° CW rotation: (r, c) → (c, n−1−r); diagonals: r−c and r+c constant (the §K.6 N-Queens identities, back again). Complex transforms are <em>compositions</em> of simple involutions — and involutions (self-inverse swaps) are exactly what can run in place.</li>
+    <li><strong>In-place state discipline</strong> — the matrix stores its own bookkeeping: flags in row 0 / column 0 (Type C), old-and-new states packed into bits of the same cell (Type D). The "structure stores the map" economy of §L.6's interleaved clone, at matrix scale.</li>
+  </ul>
+  <p><strong>The boundary-walk skeleton</strong> (spiral form — four pointers, all monotone):</p>
+<pre class="code"><code data-lang="python">top, bottom, left, right = 0, m - 1, 0, n - 1
+while top &lt;= bottom and left &lt;= right:
+    emit row `top` left→right;    top += 1
+    emit col `right` top→bottom;  right -= 1
+    if top &lt;= bottom:  emit row `bottom` right→left;  bottom -= 1
+    if left &lt;= right:  emit col `left` bottom→top;    left += 1</code></pre>
+  <div class="callout">
+    <span class="callout-label">The invariant</span>
+    <p>Everything OUTSIDE the live window [top..bottom] × [left..right] has been emitted exactly once; each pass emits one full edge of the window and shrinks one boundary. Four pointers, each moving in one direction only — §2.2's argument, now running four abreast. The two mid-loop guards are load-bearing (Type B derives why).</p>
+  </div>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ Hidden requirements</span>
+    <p>(1) <strong>In-place rotation needs a square</strong> — an m×n rectangle rotates into n×m, a different shape; no index shuffle can fix that, allocate the copy and say why. (2) <strong>Mutating the input is a policy question</strong> — ask before writing into their matrix (§GR.2's habit). (3) <strong>Marker values need an empty slot in the domain</strong> — Word Search could burn '#' because the domain was letters; Set Zeroes' domain is <em>all</em> integers, no sentinel exists — which is exactly why the row-0/col-0 trick was invented (Type C). (4) Python: <code class="ic">[[0]*n]*m</code> aliases one row m times (§F.4) — the single most common matrix bug in existence.</p>
+  </div>
+  <p><strong>Complexity tell:</strong> every cell touched a constant number of times → <strong>O(mn) time always</strong>; the interviewer's real question is the space bound — answer it before they ask. Constraint smell: matrix problems cap around 200×200 — time is never the issue; the follow-up "can you do it in place?" is the actual exam.</p>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-a" data-nav="M.2 · A — Rotate Image" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.2</span> · TYPE A · THE ARCHETYPE</p>
+  <h2>Rotate image — composition of involutions</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 48 · Rotate Image</span>
+    <span class="prob-text">Rotate an n×n matrix 90° clockwise, in place.</span>
+  </div>
+  <p><strong>Brute force:</strong> allocate b, set b[c][n−1−r] = a[r][c] → O(n²) time and <strong>O(n²) space</strong>. The redundancy IS the copy.</p>
+  <p><strong>The derivation:</strong> where does (r, c) go under 90° CW? Its row index becomes the column (top row becomes right column), and its distance-from-left becomes distance-from-top: <strong>(r, c) → (c, n−1−r)</strong>. Now factor it: transpose sends (r, c) → (c, r); horizontal reflect then sends (c, r) → (c, n−1−r). <strong>Transpose ∘ reflect = rotate</strong> — and both factors are involutions (pure swaps), so both run in place with zero memory. Composing two O(1)-space moves is the whole trick.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def rotate(matrix):
+    n = len(matrix)
+    for r in range(n):
+        for c in range(r + 1, n):          # STRICT upper triangle only
+            matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+    for row in matrix:
+        row.reverse()</code></pre>
+      <p>The strict <code class="ic">c &gt; r</code> bound is the correctness, not style: iterate the full square and every pair swaps <em>twice</em> — a very confident identity function. Counter-clockwise = transpose + reverse <em>columns</em> (or reflect first); derive, don't memorize which.</p>
+    </div>
+  </details>
+  <details class="reveal reveal--check"><summary>Check yourself: rotate [[1,2],[3,4]] by hand through both phases — what's the intermediate matrix?</summary><div class="reveal-body"><p>Transpose swaps the one strict-upper pair (2, 3): [[1,3],[2,4]]. Row-reverse: [[3,1],[4,2]] — which is [[1,2],[3,4]] rotated CW ✓. If your transpose loop covered the full square, you'd have swapped (2,3) twice and "rotated" into a mirror instead.</p></div></details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Transpose: n(n−1)/2 swaps; reflect: n·⌊n/2⌋ swaps → <strong>O(n²)</strong> time (unavoidable — every cell moves), <strong>O(1)</strong> space. The four-cycle-per-ring alternative moves each element exactly once — same bounds, harder to write correctly live; name it, code this one.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-a">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-b" data-nav="M.3 · B — Spiral" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.3</span> · TYPE B</p>
+  <h2>Spiral order — the boundary walk</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 54 · Spiral Matrix</span>
+    <span class="prob-text">Return all elements of an m×n matrix in clockwise spiral order.</span>
+  </div>
+  <p><strong>Brute force:</strong> simulate a walker with a direction vector and a visited matrix — correct, O(mn) extra space, and fiddly turn logic.</p>
+  <p><strong>Redundancy:</strong> per-cell visited bookkeeping, when four numbers summarize everything already emitted — the live window's boundaries ARE the visited set, compressed to O(1).</p>
+  <p><strong>Why exactly two guards, derived:</strong> the top pass consumes a row and the right pass consumes a column <em>unconditionally</em>. If the window had only one row, the top pass just emptied it — the bottom pass would re-emit that same row reversed. Symmetrically for one column and the left pass. The first two passes can never collide with each other (the while-condition guaranteed a non-empty window when they started); only the third and fourth passes race against a window the first two may have exhausted. Hence guards on exactly those two.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def spiralOrder(matrix):
+    res = []
+    top, bottom = 0, len(matrix) - 1
+    left, right = 0, len(matrix[0]) - 1
+    while top &lt;= bottom and left &lt;= right:
+        for c in range(left, right + 1):
+            res.append(matrix[top][c])
+        top += 1
+        for r in range(top, bottom + 1):
+            res.append(matrix[r][right])
+        right -= 1
+        if top &lt;= bottom:                  # the row may have just vanished
+            for c in range(right, left - 1, -1):
+                res.append(matrix[bottom][c])
+            bottom -= 1
+        if left &lt;= right:                  # the column may have just vanished
+            for r in range(bottom, top - 1, -1):
+                res.append(matrix[r][left])
+            left += 1
+    return res</code></pre>
+      <p>Breaking input for the missing bottom-guard: <code class="ic">[[1,2,3]]</code> — top pass emits 1,2,3; without the guard the bottom pass emits 3,2,1 again. One row of input, double the output.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Each cell emitted exactly once (the invariant); each boundary moves monotonically until crossing → <strong>O(mn)</strong> time, <strong>O(1)</strong> extra space. LC 59 (generate the spiral) is the identical walk writing instead of reading — the ladder's re-solve.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-b">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-c" data-nav="M.4 · C — Set Zeroes" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.4</span> · TYPE C</p>
+  <h2>Set matrix zeroes — the matrix stores its own flags</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 73 · Set Matrix Zeroes</span>
+    <span class="prob-text">If a cell is 0, zero its entire row and column — in place, O(1) space as the follow-up.</span>
+  </div>
+  <p><strong>The escalation:</strong> O(mn) copy → O(m+n) flag arrays ("which rows/cols must die") → O(1): <strong>reuse row 0 and column 0 AS the flag arrays.</strong></p>
+  <p><strong>Why it's legal, derived:</strong> the flags are idempotent booleans — a row "must die" whether one zero or five triggered it. Writing a 0 into matrix[r][0] as a flag can only ever <em>coincide</em> with information we're storing anyway. The only casualties are row 0 and column 0's <em>own</em> original states — so capture those in two scalars <em>before</em> any marking (read-before-overwrite: §1.4's ordering discipline as a phase structure). And why no sentinel? The domain is all integers — there is no out-of-band value to mark with; contrast §K.5's '#', which existed only because the domain was letters.</p>
+  <p><strong>The phase order is the algorithm:</strong> ① capture the two scalars → ② mark flags from the interior → ③ zero the interior from the flags → ④ settle row 0 / column 0 <em>last</em>. Zeroing the first row before step ③ wipes the flags the interior still needs.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def setZeroes(matrix):
+    m, n = len(matrix), len(matrix[0])
+    first_row = any(matrix[0][c] == 0 for c in range(n))
+    first_col = any(matrix[r][0] == 0 for r in range(m))
+    for r in range(1, m):
+        for c in range(1, n):
+            if matrix[r][c] == 0:
+                matrix[r][0] = 0           # column 0 holds row-flags
+                matrix[0][c] = 0           # row 0 holds column-flags
+    for r in range(1, m):
+        for c in range(1, n):
+            if matrix[r][0] == 0 or matrix[0][c] == 0:
+                matrix[r][c] = 0
+    if first_row:
+        for c in range(n):
+            matrix[0][c] = 0
+    if first_col:
+        for r in range(m):
+            matrix[r][0] = 0</code></pre>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Four passes, O(1) per cell → <strong>O(mn)</strong> time, <strong>O(1)</strong> space (two booleans). The quiet-wrong version zeroes <em>while scanning</em>: introduced zeros masquerade as originals and cascade — [[1,0],[1,1]] wipes everything. Mark-then-apply is mandatory, not stylistic.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-c">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-d" data-nav="M.5 · D — Game of Life" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.5</span> · TYPE D</p>
+  <h2>Simultaneous update — two generations in one cell</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 289 · Game of Life</span>
+    <span class="prob-text">Every cell updates simultaneously from its 8 neighbors' CURRENT states. Follow-up: in place.</span>
+  </div>
+  <p><strong>The problem inside the problem:</strong> "simultaneously" means every read must see the OLD generation — but in-place writes destroy it as you go. This is §D.3's sequential-assignment bug at matrix scale: update cell (0,0) naively and cell (0,1) reads the future.</p>
+  <p><strong>The insight:</strong> a cell's value is 0 or 1 — one bit — but the cell can hold an integer. <strong>Pack both generations into one cell:</strong> bit 0 = current, bit 1 = next. Neighbors read <code class="ic">&amp; 1</code> (always the old state, even after the cell is "updated"); a final sweep shifts everything right by one. §O.2's bit algebra doing state management instead of arithmetic.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def gameOfLife(board):
+    m, n = len(board), len(board[0])
+    for r in range(m):
+        for c in range(n):
+            live = 0
+            for dr in (-1, 0, 1):
+                for dc in (-1, 0, 1):
+                    if dr == dc == 0:
+                        continue
+                    nr, nc = r + dr, c + dc
+                    if 0 &lt;= nr &lt; m and 0 &lt;= nc &lt; n and board[nr][nc] &amp; 1:
+                        live += 1              # & 1: ALWAYS the old generation
+            if board[r][c] &amp; 1:
+                if live in (2, 3):
+                    board[r][c] |= 2           # bit 1 = survives
+            elif live == 3:
+                board[r][c] |= 2               # bit 1 = born
+    for r in range(m):
+        for c in range(n):
+            board[r][c] &gt;&gt;= 1                  # promote next → current</code></pre>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>8 neighbor reads per cell + one shift pass → <strong>O(mn)</strong> time, <strong>O(1)</strong> space. Verify on the blinker — a vertical [[0,1,0]] column of three 1s must become a horizontal row; the naive in-place version kills the middle cell's neighbors before they're read and the blinker dies instead of turning.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-d">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-e" data-nav="M.6 · E — Staircase search" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.6</span> · TYPE E</p>
+  <h2>Staircase search — a corner is a comparator</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 240 · Search a 2D Matrix II</span>
+    <span class="prob-text">Rows sorted left→right AND columns sorted top→bottom; find target.</span>
+  </div>
+  <p><strong>Brute force:</strong> scan O(mn); binary search each row O(m log n) — both ignore that the two sort orders <em>interact</em>.</p>
+  <p><strong>The discard proof (the §T sentence, twice per position):</strong> stand at the <strong>top-right</strong> corner — the minimum of its row, the maximum of its column. If the value is too big, every cell below it in this column is bigger still — <em>the whole column dies</em>. If too small, every cell to its left is smaller — <em>the whole row dies</em>. One comparison retires an entire row or column, permanently. Start top-left instead and both moves make things bigger — no discard exists; only the top-right and bottom-left corners are comparators.</p>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def searchMatrix(matrix, target):
+    r, c = 0, len(matrix[0]) - 1       # top-right: row-min, column-max
+    while r &lt; len(matrix) and c &gt;= 0:
+        v = matrix[r][c]
+        if v == target:
+            return True
+        if v &gt; target:
+            c -= 1                     # column below: all larger — dead
+        else:
+            r += 1                     # row to the left: all smaller — dead
+    return False</code></pre>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Each step moves r up or c down, never back — at most m + n steps → <strong>O(m + n)</strong>, O(1) space. Two one-direction pointers on a grid: §2.2's argument in two dimensions. (LC 74's stricter guarantee — each row starts after the last ends — upgrades to one O(log mn) binary search; know which problem you're holding.)</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-e">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-f" data-nav="M.7 · F — Increasing path ★" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.7</span> · TYPE F · THE BOSS</p>
+  <h2>Longest increasing path — the lab in one problem</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 329 · Longest Increasing Path in a Matrix (hard)</span>
+    <span class="prob-text">Longest path moving in 4 directions where each step strictly increases.</span>
+  </div>
+  <p><strong>Brute force:</strong> DFS every increasing path from every cell — exponential; the same "longest path from (r,c)" recomputed once per visitor.</p>
+  <p><strong>The chain of recognitions (three sets composing):</strong></p>
+  <ol>
+    <li><strong>Grid-as-graph</strong> (§GR.2): cells are nodes, increasing adjacencies are directed edges.</li>
+    <li><strong>Strictness ⇒ DAG:</strong> a cycle would need values a &lt; b &lt; … &lt; a — impossible. So this graph has no cycles, and — the beautiful consequence — <strong>no visited set is needed</strong>: DFS cannot revisit along a path (§GR.7's mandatory visited set was for graphs that CAN cycle).</li>
+    <li><strong>Overlapping subproblems on a DAG ⇒ memoize</strong> (§D.1's identity, purest form): memo[r][c] = longest path <em>starting</em> at (r,c); memoized DFS computes each state once, in an order the recursion discovers for itself — post-order IS a topological order.</li>
+  </ol>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def longestIncreasingPath(matrix):
+    m, n = len(matrix), len(matrix[0])
+    memo = [[0] * n for _ in range(m)]
+    def dfs(r, c):
+        if memo[r][c]:
+            return memo[r][c]          # check before compute — §1.4, final form
+        best = 1
+        for dr, dc in ((1,0),(-1,0),(0,1),(0,-1)):
+            nr, nc = r + dr, c + dc
+            if 0 &lt;= nr &lt; m and 0 &lt;= nc &lt; n and matrix[nr][nc] &gt; matrix[r][c]:
+                best = max(best, 1 + dfs(nr, nc))
+        memo[r][c] = best
+        return best
+    return max(dfs(r, c) for r in range(m) for c in range(n))</code></pre>
+      <p>Note what is absent: no visited set, no explicit topological sort, no path copying. Strictness bought all three. Adding a visited set here isn't just redundant — combined carelessly with the memo it corrupts answers for shared suffixes.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Charging: each cell's dfs body runs once (memo guard); each of the ≤ 4mn edges is relaxed once → <strong>O(mn)</strong> time, O(mn) memo. Recursion depth can reach mn on a strictly increasing snake — the §TR stack caveat applies; the iterative alternative is Kahn's (§GR.4) on increasing-edge indegrees, "peeling minima". When you can name BOTH traversals and why they're the same computation, the lab's method has fully compounded.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-f">Mark understood</button></div>
+</section>
+
+<section class="sec" id="mx-traps" data-nav="M.8 · Traps &amp; drill" data-group="Set 17 · Matrix moves">
+  <p class="eyebrow"><span class="dim">§M.8</span> · BEFORE YOU SUBMIT + INTERROGATION</p>
+  <h2>Traps, signals &amp; interrogation</h2>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span><code class="ic">[[0]*n]*m</code> — m aliases of ONE row (§F.4); writing any cell writes the whole column. Use a comprehension</span></label></li>
+    <li><label><input type="checkbox"><span>Transpose over the full square — every pair swapped twice; a confident identity function</span></label></li>
+    <li><label><input type="checkbox"><span>Rotating a rectangle in place — the shape changes (m×n → n×m); allocate and say why</span></label></li>
+    <li><label><input type="checkbox"><span>Spiral without the two guards — [[1,2,3]] emits six values; single-row/column windows double-emit</span></label></li>
+    <li><label><input type="checkbox"><span>Set Zeroes zeroing while scanning — introduced zeros cascade ([[1,0],[1,1]] wipes everything); mark, THEN apply</span></label></li>
+    <li><label><input type="checkbox"><span>Set Zeroes settling row 0 / col 0 before the interior — the flags die while still needed; phase order is the algorithm</span></label></li>
+    <li><label><input type="checkbox"><span>Game of Life reading updated neighbors — the blinker dies instead of turning; pack generations in bits</span></label></li>
+    <li><label><input type="checkbox"><span>Staircase from the top-LEFT — both moves increase the value; no discard proof exists at that corner</span></label></li>
+    <li><label><input type="checkbox"><span>LC 329 with a visited set — unnecessary (strictness ⇒ DAG) and dangerous next to the memo</span></label></li>
+    <li><label><input type="checkbox"><span><code class="ic">zip(*matrix)</code> "transposes" into NEW tuples — fine for reading, not an in-place answer; know what the one-liner hides</span></label></li>
+  </ul>
+  <h3>Signals → pattern (added to the drill deck in §3.2)</h3>
+<pre class="code"><code data-lang="none">"rotate / flip an image in place"            → compose involutions: transpose + reflect
+"traverse in spiral / layer order"           → four shrinking boundaries + the two guards
+"zero/mark by full row and column, O(1)"     → borrow row 0 and column 0 as the flag arrays
+"all cells update SIMULTANEOUSLY"            → pack old + new generations into bits, shift last
+"sorted by rows AND columns, find target"    → staircase from top-right — one comparison kills a line
+"longest strictly ordered path in a grid"    → strictness ⇒ DAG ⇒ memoized DFS, no visited set</code></pre>
+  <h3>Interrogation — answer in your journal</h3>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">M1</span><p class="jq-text">Derive (r, c) → (c, n−1−r) for 90° CW from first principles, show transpose ∘ reflect composes to it, and prove the transpose loop must cover only the strict upper triangle — trace [[1,2],[3,4]] with the full-square loop to its failure.</p></div>
+    <textarea class="journal" data-jkey="mq1" placeholder="Derivation + composition + the double-swap trace…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Track where the top row lands, then factor the move into two mirrors.</p><p><strong>Sketch:</strong> CW sends row r to column position... the top row becomes the rightmost column: new column = n−1−r, new row = c → (c, n−1−r). Transpose gives (c, r); reflecting each row maps column r → n−1−r → composed (c, n−1−r) ✓. Full-square transpose swaps (r,c)/(c,r) AND later (c,r)/(r,c) — every pair returns home; on [[1,2],[3,4]] the "transpose" outputs the input, and the reflect alone produces a mirror, not a rotation.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">M2</span><p class="jq-text">State the spiral's four-pointer invariant. Construct the exact double-emission on [[1,2,3]] with the bottom guard removed, and prove why exactly the third and fourth passes need guards but the first two never do.</p></div>
+    <textarea class="journal" data-jkey="mq2" placeholder="Invariant + the trace + the asymmetry proof…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Who shrank the window between the while-check and each pass?</p><p><strong>Sketch:</strong> Invariant: cells outside [top..bottom]×[left..right] are emitted exactly once. [[1,2,3]]: top pass emits 1,2,3, top becomes 1 &gt; bottom 0; the unguarded bottom pass emits 3,2,1 again. The while-condition certifies a non-empty window for passes 1–2; only passes 3–4 run after the window may have been exhausted by 1–2 — so exactly they need re-checking.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">M3</span><p class="jq-text">Set Zeroes: why can no sentinel value work here when Word Search's '#' could? Prove the four-phase order correct, and show concretely what breaks if row 0 is settled before the interior.</p></div>
+    <textarea class="journal" data-jkey="mq3" placeholder="Domain argument + phase proof + the break…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> A sentinel needs a value the data can never take.</p><p><strong>Sketch:</strong> The domain is all 32-bit ints — every value is legal data, so no out-of-band marker exists ('#' worked because boards hold letters). Phases: capture the two scalars (their cells are about to become flag storage), mark interior → flags only ever <em>add</em> zeros that belong, apply interior from flags, settle borders LAST. Settle row 0 first and its zeros erase column-flags the interior pass still needs — columns that should die survive.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">M4</span><p class="jq-text">Game of Life: connect the naive in-place bug to §D.3's sequential-assignment bug, prove bit0/bit1 packing preserves simultaneous semantics, and trace the vertical blinker to its horizontal next generation.</p></div>
+    <textarea class="journal" data-jkey="mq4" placeholder="The connection + proof + blinker trace…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What does a neighbor's <code class="ic">&amp; 1</code> read after that neighbor was "updated"?</p><p><strong>Sketch:</strong> Naive in-place = later cells reading earlier cells' futures — exactly take/skip reading the new value in §D.3, at scale. Writing only bit 1 leaves bit 0 untouched, so <code class="ic">&amp; 1</code> reads the old generation everywhere until the final shift promotes atomically. Blinker: middle cell keeps 2 live neighbors → survives; its vertical neighbors have 1 each → die; the two horizontal cells beside the center see 3 → born. Vertical bar becomes horizontal ✓.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">M5</span><p class="jq-text">240 + 329: recite the staircase discard sentence for both moves and derive O(m+n). Then prove strictness makes 329's implicit graph a DAG, explain why that eliminates the visited set, and derive O(mn) by charging.</p></div>
+    <textarea class="journal" data-jkey="mq5" placeholder="Both discards + DAG proof + charging…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What would a cycle's values have to satisfy?</p><p><strong>Sketch:</strong> Top-right: too big ⇒ the column below is larger still (columns sorted) — dead; too small ⇒ the row leftward is smaller (rows sorted) — dead. Each step retires a line; ≤ m+n steps. 329: a cycle needs a &lt; b &lt; … &lt; a — impossible ⇒ DAG ⇒ DFS can't loop, so visited adds nothing. Charging: memo guard runs each cell's body once; each cell relaxes ≤ 4 edges → O(mn).</p></div></details>
+  </div>
+  <div class="sec-foot"><button class="btn understood" data-sec="mx-traps">Mark understood</button></div>
+</section>
+
 <!-- ================= LADDER ================= -->
 <section class="sec" id="ladder-sec" data-nav="3.5 · Practice ladder" data-group="Drills">
   <p class="eyebrow"><span class="dim">§3.5</span> · RUN THE FULL PROTOCOL ON EACH</p>
@@ -6438,7 +6761,13 @@ centers: n characters (odd lengths) + n−1 gaps (even lengths) = 2n−1</code><
     { q: '"palindromic SUBSEQUENCE"', a: 'interval DP (Set 13) — the sibling, NOT expand-around-center' },
     { q: '"implement atoi / parse this format"', a: 'spec → checklist → state machine — no trick exists, say so' },
     { q: '"evaluate an expression, no parentheses"', a: 'defer +/− as signed pushes, fire * and / immediately' },
-    { q: '"format / justify / render text by rules"', a: 'greedy fit + divmod distribution + the two special lines' }
+    { q: '"format / justify / render text by rules"', a: 'greedy fit + divmod distribution + the two special lines' },
+    { q: '"rotate / flip an image in place"', a: 'compose involutions — transpose + reflect, strict triangle' },
+    { q: '"traverse in spiral / layer order"', a: 'four shrinking boundaries + guards on passes 3 and 4' },
+    { q: '"zero/mark by full row and column, O(1) space"', a: 'borrow row 0 and column 0 as the flag arrays' },
+    { q: '"all cells update SIMULTANEOUSLY"', a: 'pack old + new generations into bits — shift to promote' },
+    { q: '"matrix sorted by rows AND columns"', a: 'staircase from top-right — one comparison kills a line' },
+    { q: '"longest strictly ordered path in a grid"', a: 'strictness ⇒ DAG ⇒ memoized DFS — no visited set' }
   ];
   var queue = [], flipped = false, firstTry = 0, seenCount = 0, missedNow = {};
   var quizOn = false, quizAnswered = false, quizRight = 0, quizSeen = 0;
@@ -6702,7 +7031,14 @@ centers: n characters (odd lengths) + n−1 gaps (even lengths) = 2n−1</code><
     { set: '16', lc: 647, name: 'Palindromic Substrings', focus: 'same centers, count every expansion step' },
     { set: '16', lc: 8, name: 'String to Integer (atoi)', focus: 'the parsing archetype — checklist before code' },
     { set: '16', lc: 227, name: 'Basic Calculator II', focus: 'defer +/−, fire */ — and int(a/b), not //' },
-    { set: '16', lc: 68, name: 'Text Justification', focus: 'boss fight — fit, distribute, two special lines' }
+    { set: '16', lc: 68, name: 'Text Justification', focus: 'boss fight — fit, distribute, two special lines' },
+    { set: '17', lc: 48, name: 'Rotate Image', focus: 'the archetype — transpose ∘ reflect, strict triangle' },
+    { set: '17', lc: 54, name: 'Spiral Matrix', focus: 'four boundaries + derive the two guards' },
+    { set: '17', lc: 59, name: 'Spiral Matrix II', focus: 're-solve of 54 — same walk, writing not reading' },
+    { set: '17', lc: 73, name: 'Set Matrix Zeroes', focus: 'row 0 / col 0 as flags — phase order is the algorithm' },
+    { set: '17', lc: 289, name: 'Game of Life', focus: 'bit-packed generations — simultaneity preserved' },
+    { set: '17', lc: 240, name: 'Search a 2D Matrix II', focus: 'staircase from top-right — recite both discards' },
+    { set: '17', lc: 329, name: 'Longest Increasing Path', focus: 'boss fight — strictness ⇒ DAG ⇒ memo, no visited' }
   ];
   var SET_LABELS = {
     '01': 'Set 01 · Sliding window & prefix sum',
@@ -6721,7 +7057,8 @@ centers: n characters (odd lengths) + n−1 gaps (even lengths) = 2n−1</code><
     '13': 'Set 13 · DP II & III',
     '14': 'Set 14 · Design data structures',
     '15': 'Set 15 · Odds & ends',
-    '16': 'Set 16 · Strings residue'
+    '16': 'Set 16 · Strings residue',
+    '17': 'Set 17 · Matrix moves'
   };
   function addDays(iso, d) {
     var dt = new Date(iso + 'T12:00:00');
