@@ -101,6 +101,8 @@ strong { font-weight: 650; }
   color: var(--accent-ink); background: var(--accent-wash);
   border: 1px solid var(--line); padding: 5px 8px; display: inline-block;
 }
+a.setchip { text-decoration: none; }
+a.setchip:hover { border-color: var(--accent); background: var(--accent); color: var(--paper); }
 .progress { display: flex; flex-direction: column; gap: 7px; }
 .progress-label {
   font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
@@ -540,6 +542,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   <div class="setrow">
     <span class="setchip">16 SETS · 25/25 PATTERNS · ATLAS COMPLETE</span>
     <span class="setchip">STUDY ORDER: SET 00 → BASELINE → SET 01 → 02 … 15</span>
+    <a class="setchip" href="design/">DESIGN LAB · HLD &amp; LLD →</a>
   </div>
 </div>
 
