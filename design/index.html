@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Lab — HLD & LLD</title>
+<style>
+:root {
+  --paper: #F5F7F4; --ink: #1C2522; --muted: #5F6E68; --line: #D9E1DC;
+  --accent: #0E7568; --accent-ink: #0A5A50; --accent-wash: rgba(14,117,104,0.07);
+  --grid-line: rgba(14,117,104,0.06);
+  --serif: 'Charter', 'Iowan Old Style', 'Palatino', Georgia, serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0F1412; --ink: #E2E9E4; --muted: #91A29A; --line: #263029;
+    --accent: #3FBFAB; --accent-ink: #6BD4C3; --accent-wash: rgba(63,191,171,0.09);
+    --grid-line: rgba(63,191,171,0.05);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--paper); color: var(--ink);
+  font-family: var(--serif); font-size: 17px; line-height: 1.68;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+main { max-width: 640px; padding: 48px 24px; }
+h1 {
+  font-family: var(--mono); font-size: clamp(26px, 5vw, 38px); font-weight: 700;
+  letter-spacing: -0.01em; margin: 0 0 12px;
+}
+h1 .cursor { color: var(--accent); }
+.sub {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--muted); margin: 0 0 24px;
+}
+p { color: var(--muted); max-width: 56ch; margin: 0 0 16px; }
+a { color: var(--accent-ink); }
+.chip {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
+  color: var(--accent-ink); background: var(--accent-wash);
+  border: 1px solid var(--line); padding: 5px 8px; display: inline-block; margin-right: 8px;
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Design Lab — HLD &amp; LLD<span class="cursor">▍</span></h1>
+  <p class="sub">System design &amp; low-level design · basics to advanced · deliberate practice</p>
+  <span class="chip">TRACK 1 · LLD — L0…L7</span>
+  <span class="chip">TRACK 2 · HLD — H0…H12</span>
+  <p style="margin-top:24px;">Sets land here one at a time, same protocol as the <a href="../">DSA Pattern Lab</a>: attempt-first notes, real interview questions, the 45-minute scripts, and spaced re-solves.</p>
+</main>
+</body>
+</html>
