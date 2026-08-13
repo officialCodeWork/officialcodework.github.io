@@ -1,0 +1,1096 @@
+<title>LLD Lab · Machine Coding Prep</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Low-level design lab for FAANG machine-coding rounds: SOLID, design patterns, and classic LLD problems with staged model answers, spaced re-designs, and drills.">
+<meta name="theme-color" content="#0E1613">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='12'%20fill='%230E1613'/%3E%3Crect%20x='5.5'%20y='5.5'%20width='53'%20height='53'%20rx='9'%20fill='none'%20stroke='%233FBFAB'%20stroke-opacity='0.35'%20stroke-width='2'/%3E%3Ctext%20x='12'%20y='47'%20font-family='Menlo,monospace'%20font-size='40'%20font-weight='bold'%20fill='%23E2E9E4'%3EL%3C/text%3E%3Crect%20x='40'%20y='15'%20width='9'%20height='36'%20fill='%233FBFAB'/%3E%3C/svg%3E">
+<style>
+/* ============ tokens ============ */
+:root {
+  --paper: #F5F7F4;
+  --surface: #FCFDFB;
+  --ink: #1C2522;
+  --muted: #5F6E68;
+  --line: #D9E1DC;
+  --line-soft: #E7EDE9;
+  --accent: #0E7568;
+  --accent-ink: #0A5A50;
+  --accent-wash: rgba(14, 117, 104, 0.07);
+  --amber: #A85F0B;
+  --amber-wash: rgba(168, 95, 11, 0.08);
+  --code-bg: #0E1613;
+  --code-default: #C9D6CF;
+  --code-kw: #7FD9C8;
+  --code-str: #E2C07C;
+  --code-com: #5F7A6E;
+  --code-num: #C7A3E8;
+  --code-fn: #9AC1E8;
+  --grid-line: rgba(14, 117, 104, 0.06);
+  --shadow: 0 1px 3px rgba(28, 37, 34, 0.06);
+  --serif: 'Charter', 'Iowan Old Style', 'Palatino', Georgia, serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0F1412;
+    --surface: #151C18;
+    --ink: #E2E9E4;
+    --muted: #91A29A;
+    --line: #263029;
+    --line-soft: #1C2620;
+    --accent: #3FBFAB;
+    --accent-ink: #6BD4C3;
+    --accent-wash: rgba(63, 191, 171, 0.09);
+    --amber: #DFA45C;
+    --amber-wash: rgba(223, 164, 92, 0.10);
+    --grid-line: rgba(63, 191, 171, 0.05);
+    --shadow: none;
+  }
+}
+:root[data-theme="light"] {
+  --paper: #F5F7F4; --surface: #FCFDFB; --ink: #1C2522; --muted: #5F6E68;
+  --line: #D9E1DC; --line-soft: #E7EDE9; --accent: #0E7568; --accent-ink: #0A5A50;
+  --accent-wash: rgba(14,117,104,0.07); --amber: #A85F0B; --amber-wash: rgba(168,95,11,0.08);
+  --grid-line: rgba(14,117,104,0.06); --shadow: 0 1px 3px rgba(28,37,34,0.06);
+}
+:root[data-theme="dark"] {
+  --paper: #0F1412; --surface: #151C18; --ink: #E2E9E4; --muted: #91A29A;
+  --line: #263029; --line-soft: #1C2620; --accent: #3FBFAB; --accent-ink: #6BD4C3;
+  --accent-wash: rgba(63,191,171,0.09); --amber: #DFA45C; --amber-wash: rgba(223,164,92,0.10);
+  --grid-line: rgba(63,191,171,0.05); --shadow: none;
+}
+
+/* ============ base ============ */
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.68;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent-ink); }
+strong { font-weight: 650; }
+
+/* ============ shell ============ */
+#app { display: grid; grid-template-columns: 272px minmax(0, 1fr); min-height: 100vh; }
+
+/* ---- sidebar ---- */
+#sidebar {
+  border-right: 1px solid var(--line);
+  background: var(--paper);
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto;
+  padding: 26px 20px 40px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+.brand { display: flex; flex-direction: column; gap: 4px; }
+.brand-name {
+  font-family: var(--mono); font-size: 15px; font-weight: 700;
+  letter-spacing: 0.02em; color: var(--ink);
+}
+.brand-name .tick { color: var(--accent); }
+.brand-sub {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--muted);
+}
+.setchip {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
+  color: var(--accent-ink); background: var(--accent-wash);
+  border: 1px solid var(--line); padding: 5px 8px; display: inline-block;
+}
+a.setchip { text-decoration: none; }
+a.setchip:hover { border-color: var(--accent); background: var(--accent); color: var(--paper); }
+.progress { display: flex; flex-direction: column; gap: 7px; }
+.progress-label {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--muted);
+  display: flex; justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+.progress-bar { height: 3px; background: var(--line-soft); }
+.progress-bar i { display: block; height: 100%; background: var(--accent); width: 0%; }
+@media (prefers-reduced-motion: no-preference) {
+  .progress-bar i { transition: width 0.35s ease; }
+}
+#nav { display: flex; flex-direction: column; gap: 18px; }
+.navgroup { display: flex; flex-direction: column; gap: 2px; }
+.navgroup-label {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--muted); margin-bottom: 5px;
+}
+.navlink {
+  font-family: var(--mono); font-size: 12px; line-height: 1.4;
+  color: var(--muted); text-decoration: none;
+  padding: 4px 8px 4px 10px; border-left: 2px solid transparent;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+}
+.navlink:hover { color: var(--ink); background: var(--accent-wash); }
+.navlink.active { color: var(--accent-ink); border-left-color: var(--accent); }
+.navlink .check { color: var(--accent); font-size: 10px; visibility: hidden; }
+.navlink.done .check { visibility: visible; }
+
+/* ---- topbar (mobile) ---- */
+#topbar {
+  display: none;
+  position: sticky; top: 0; z-index: 30;
+  background: var(--paper); border-bottom: 1px solid var(--line);
+  padding: 12px 16px; align-items: center; gap: 12px;
+}
+#menuBtn {
+  font-family: var(--mono); font-size: 12px; background: none;
+  border: 1px solid var(--line); color: var(--ink); padding: 6px 10px; cursor: pointer;
+}
+#topbar .brand-name { font-size: 13px; }
+
+/* ---- main ---- */
+main { min-width: 0; padding: 0 48px 120px; }
+.inner { max-width: 780px; }
+
+/* masthead with quad-grid paper */
+.masthead {
+  padding: 52px 0 34px;
+  border-bottom: 1px solid var(--line);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 22px 22px;
+  margin: 0 -48px; padding-left: 48px; padding-right: 48px;
+}
+.masthead h1 {
+  font-family: var(--mono); font-size: clamp(24px, 4vw, 34px); font-weight: 700;
+  letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance;
+}
+.masthead h1 .cursor { color: var(--accent); }
+.masthead p { max-width: 62ch; color: var(--muted); margin: 0 0 16px; }
+.masthead .setrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ============ sections ============ */
+.sec { padding: 44px 0 36px; border-bottom: 1px solid var(--line-soft); }
+.eyebrow {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--accent-ink); margin: 0 0 8px;
+}
+.eyebrow .dim { color: var(--muted); }
+.sec h2 {
+  font-family: var(--mono); font-size: 21px; font-weight: 650;
+  letter-spacing: -0.01em; margin: 0 0 18px; text-wrap: balance;
+}
+.sec h3 {
+  font-family: var(--mono); font-size: 14.5px; font-weight: 650;
+  margin: 28px 0 10px;
+}
+.sec p, .sec li { max-width: 68ch; }
+.sec p { margin: 0 0 14px; }
+.sec ul, .sec ol { margin: 0 0 16px; padding-left: 24px; }
+.sec li { margin-bottom: 6px; }
+.ic {
+  font-family: var(--mono); font-size: 0.82em;
+  background: var(--accent-wash); border: 1px solid var(--line-soft);
+  padding: 1px 5px; border-radius: 3px; white-space: nowrap;
+}
+.sec-foot { margin-top: 26px; }
+
+/* problem statement */
+.prob {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 14px 18px; margin: 0 0 18px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.prob-tag {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--amber);
+}
+.prob-text { font-style: italic; color: var(--ink); max-width: 65ch; }
+
+/* callouts */
+.callout {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 14px 18px; margin: 0 0 16px;
+}
+.callout-label {
+  display: block; font-family: var(--mono); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--accent-ink); margin-bottom: 6px;
+}
+.callout--warn { border-color: var(--amber); background: var(--amber-wash); }
+.callout--warn .callout-label { color: var(--amber); }
+.callout p:last-child { margin-bottom: 0; }
+
+/* reveal blocks */
+details.reveal { border: 1px solid var(--line); background: var(--surface); margin: 0 0 16px; }
+details.reveal > summary {
+  cursor: pointer; list-style: none; padding: 11px 16px;
+  font-family: var(--mono); font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted);
+  display: flex; align-items: center; gap: 10px; user-select: none;
+}
+details.reveal > summary::-webkit-details-marker { display: none; }
+details.reveal > summary::before { content: '▸'; color: var(--accent); font-size: 12px; }
+details.reveal[open] > summary::before { content: '▾'; }
+details.reveal > summary:hover { color: var(--ink); background: var(--accent-wash); }
+details.reveal > summary .hint { margin-left: auto; color: var(--amber); letter-spacing: 0.06em; text-transform: none; font-size: 11px; }
+details.reveal > .reveal-body { padding: 4px 16px 16px; border-top: 1px dashed var(--line); }
+details.reveal > .reveal-body > p:first-child { margin-top: 12px; }
+
+/* code panes — deliberately dark in both themes */
+pre.code {
+  background: var(--code-bg); color: var(--code-default);
+  font-family: var(--mono); font-size: 13px; line-height: 1.62;
+  padding: 15px 18px; margin: 12px 0 16px; overflow-x: auto;
+  border-radius: 4px; tab-size: 4;
+}
+pre.code code { font-family: inherit; }
+.tok-kw { color: var(--code-kw); }
+.tok-str { color: var(--code-str); }
+.tok-com { color: var(--code-com); font-style: italic; }
+.tok-num { color: var(--code-num); }
+.tok-fn { color: var(--code-fn); }
+
+/* tables */
+.tblwrap { overflow-x: auto; margin: 0 0 16px; }
+table.tbl { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.tbl th {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted); text-align: left;
+  padding: 8px 14px 8px 0; border-bottom: 1px solid var(--line);
+}
+table.tbl td {
+  padding: 9px 14px 9px 0; border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+table.tbl td.m { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+table.tbl td .arrow { color: var(--accent); }
+
+/* pattern atlas */
+.tbl--atlas { min-width: 720px; font-size: 14px; }
+.tbl--atlas td { padding: 8px 12px 8px 0; }
+.badge {
+  display: inline-block; font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.08em; padding: 2px 7px; border: 1px solid var(--line);
+  color: var(--muted);
+}
+.badge--s { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-wash); }
+.badge--a { border-color: var(--amber); color: var(--amber); background: var(--amber-wash); }
+td.set { font-family: var(--mono); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.set .done { color: var(--accent-ink); }
+.atlas-legend {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  letter-spacing: 0.03em; margin: 0 0 12px;
+}
+
+/* buttons */
+.btn {
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.08em; padding: 7px 13px; cursor: pointer;
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  border-radius: 2px;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent-ink); }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.btn--primary:hover { color: var(--paper); opacity: 0.9; }
+.btn--on { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-wash); }
+.btn:disabled { opacity: 0.35; cursor: default; }
+.btn:disabled:hover { border-color: var(--line); color: var(--muted); }
+
+/* ============ trace player ============ */
+.trace {
+  border: 1px solid var(--line); background: var(--surface);
+  padding: 20px; margin: 4px 0 18px; box-shadow: var(--shadow);
+}
+.trace-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--muted); margin-bottom: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.trace-cells { display: flex; gap: 6px; margin-bottom: 6px; }
+.cell {
+  width: 52px; height: 52px; border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 15px; font-variant-numeric: tabular-nums;
+  background: var(--paper); position: relative;
+}
+.cell--active { border-color: var(--accent); background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent); }
+.cell--past { color: var(--muted); }
+.cell--match { border-bottom: 3px solid var(--amber); }
+.trace-idx { display: flex; gap: 6px; margin-bottom: 18px; }
+.trace-idx span {
+  width: 52px; text-align: center; font-family: var(--mono);
+  font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+.trace-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.stat {
+  border: 1px solid var(--line-soft); background: var(--paper);
+  padding: 8px 12px; min-width: 92px;
+}
+.stat b {
+  display: block; font-family: var(--mono); font-size: 9.5px;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  font-weight: 500; margin-bottom: 3px;
+}
+.stat span { font-family: var(--mono); font-size: 16px; font-variant-numeric: tabular-nums; }
+.stat--hit span { color: var(--amber); }
+.stat--count span { color: var(--accent-ink); }
+.trace-map { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+.trace-map .maplabel {
+  font-family: var(--mono); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--muted); margin-right: 4px;
+}
+.chip {
+  font-family: var(--mono); font-size: 12.5px; padding: 3px 8px;
+  border: 1px solid var(--line); background: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+.chip--new { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-wash); }
+.chip--hit { border-color: var(--amber); color: var(--amber); background: var(--amber-wash); }
+.trace-note { font-size: 15px; color: var(--muted); font-style: italic; min-height: 44px; max-width: 62ch; margin: 0 0 14px; }
+.trace-note strong { color: var(--ink); }
+.trace-ctrl { display: flex; gap: 8px; }
+
+/* ============ flashcards ============ */
+.deck { border: 1px solid var(--line); background: var(--surface); padding: 20px; margin: 4px 0 18px; box-shadow: var(--shadow); }
+.deck-head {
+  display: flex; justify-content: space-between; font-family: var(--mono);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted); margin-bottom: 14px; font-variant-numeric: tabular-nums;
+}
+.card {
+  border: 1px dashed var(--line); background: var(--paper);
+  padding: 26px 24px; min-height: 130px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 10px; justify-content: center;
+}
+.card:hover { border-color: var(--accent); }
+.card .face-label {
+  font-family: var(--mono); font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: 0.15em; color: var(--muted);
+}
+.card .face-text { font-size: 18px; line-height: 1.5; }
+.card.flipped .face-label { color: var(--accent-ink); }
+.card .face-text.answer { font-family: var(--mono); font-size: 15.5px; color: var(--accent-ink); }
+.deck-ctrl { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.deck-done { font-size: 16px; padding: 10px 0 0; }
+
+/* ============ checklist ============ */
+.bugcheck { display: flex; flex-direction: column; gap: 2px; margin: 0 0 16px; padding: 0; list-style: none; }
+.bugcheck li { max-width: none; margin: 0; }
+.bugcheck label {
+  display: flex; gap: 12px; align-items: baseline; padding: 8px 10px;
+  border-bottom: 1px solid var(--line-soft); cursor: pointer; font-size: 15.5px;
+}
+.bugcheck label:hover { background: var(--accent-wash); }
+.bugcheck input { accent-color: var(--accent); transform: translateY(1px); }
+.bugcheck input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--accent); }
+
+/* ============ ladder ============ */
+.ladder { display: flex; flex-direction: column; gap: 14px; margin: 4px 0 18px; }
+.ladder-set-label {
+  font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--accent-ink); margin: 14px 0 0;
+}
+.ladder-set-label:first-child { margin-top: 0; }
+
+/* ============ figures / diagrams ============ */
+.fig { border: 1px solid var(--line); background: var(--surface); padding: 18px 16px 10px; margin: 4px 0 18px; overflow-x: auto; }
+.fig svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+.fig figcaption { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: center; margin-top: 10px; max-width: 60ch; margin-left: auto; margin-right: auto; }
+.dg-t { font-family: var(--mono); font-size: 12px; fill: var(--ink); }
+.dg-td { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+.dg-ta { font-family: var(--mono); font-size: 12px; fill: var(--accent-ink); }
+.dg-tw { font-family: var(--mono); font-size: 10.5px; fill: var(--amber); }
+.dg-box { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.dg-boxa { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.4; }
+.dg-boxw { fill: var(--amber-wash); stroke: var(--amber); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.dg-e { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+.dg-ea { stroke: var(--accent); stroke-width: 1.7; fill: none; }
+.dg-ew { stroke: var(--amber); stroke-width: 1.5; fill: none; }
+.dg-fa { fill: var(--accent); } .dg-fm { fill: var(--muted); } .dg-fw { fill: var(--amber); }
+
+/* check-yourself + hint reveals */
+details.reveal--check > summary::before { content: '?'; font-weight: 700; color: var(--amber); }
+details.reveal--check > summary { color: var(--amber); }
+details.reveal--hint { margin-top: 8px; }
+details.reveal--hint > summary { font-size: 10.5px; }
+details.reveal--plain { border-color: var(--accent); }
+details.reveal--plain > summary { color: var(--accent-ink); }
+
+/* step players */
+.player-frame { min-height: 110px; white-space: pre; }
+
+/* desk */
+.desk-due { display: flex; flex-direction: column; gap: 6px; }
+.due-alert { font-family: var(--mono); font-size: 12.5px; padding: 8px 12px; border: 1px solid var(--amber); background: var(--amber-wash); color: var(--amber); }
+.due-none { font-family: var(--mono); font-size: 12px; color: var(--muted); padding: 6px 0; }
+
+/* quiz */
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.quiz-opt { text-align: left; font-family: var(--mono); font-size: 12.5px; padding: 10px 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.quiz-opt:hover { border-color: var(--accent); }
+.quiz-opt.right { border-color: var(--accent); background: var(--accent-wash); color: var(--accent-ink); }
+.quiz-opt.wrong { border-color: var(--amber); background: var(--amber-wash); color: var(--amber); }
+.quiz-opt:disabled { cursor: default; opacity: 1; }
+
+/* nav filter */
+.navfilter { width: 100%; font-family: var(--mono); font-size: 11.5px; padding: 7px 9px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); margin-bottom: 4px; }
+.navfilter:focus { outline: none; border-color: var(--accent); }
+
+/* decision tree */
+.dtree { display: flex; flex-direction: column; margin: 0 0 16px; }
+.dtree-q { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; padding: 10px 14px; border: 1px solid var(--line); background: var(--surface); border-bottom: none; }
+.dtree-q:last-child { border-bottom: 1px solid var(--line); }
+.dtree-q b { color: var(--accent-ink); }
+.dtree-q .goto { color: var(--amber); white-space: nowrap; }
+.rung { border: 1px solid var(--line); background: var(--surface); padding: 16px 18px; box-shadow: var(--shadow); }
+.rung-top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rung-num {
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.rung-name { font-family: var(--mono); font-size: 14px; font-weight: 650; }
+.rung-focus {
+  font-family: var(--mono); font-size: 10.5px; color: var(--amber);
+  letter-spacing: 0.04em;
+}
+.rung-meta {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.due-chip {
+  font-family: var(--mono); font-size: 10.5px; padding: 4px 9px;
+  border: 1px solid var(--line); background: transparent; cursor: pointer;
+  color: var(--muted); border-radius: 2px;
+}
+.due-chip:hover { border-color: var(--accent); }
+.due-chip.due { border-color: var(--amber); color: var(--amber); background: var(--amber-wash); }
+.due-chip.done { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-wash); text-decoration: line-through; }
+.rung textarea { margin-top: 12px; }
+.rung .reset { background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 10px; cursor: pointer; text-decoration: underline; padding: 0; }
+.rung .reset:hover { color: var(--amber); }
+
+/* ============ journal ============ */
+.jq { margin-bottom: 22px; }
+.jq-q { display: flex; gap: 12px; margin-bottom: 8px; }
+.jq-num {
+  font-family: var(--mono); font-size: 12px; color: var(--accent-ink);
+  font-variant-numeric: tabular-nums; padding-top: 3px;
+}
+.jq-text { max-width: 64ch; }
+textarea.journal {
+  width: 100%; min-height: 96px; resize: vertical;
+  font-family: var(--mono); font-size: 13px; line-height: 1.6;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line); padding: 10px 12px;
+}
+textarea.journal:focus { outline: none; border-color: var(--accent); }
+textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
+.savenote { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* footer */
+.appfoot { padding: 40px 0; color: var(--muted); font-size: 14.5px; max-width: 62ch; }
+.appfoot .m { font-family: var(--mono); font-size: 12px; }
+
+/* ============ responsive ============ */
+@media (max-width: 920px) {
+  #app { grid-template-columns: 1fr; }
+  #topbar { display: flex; }
+  #sidebar {
+    position: fixed; z-index: 40; left: 0; top: 0; bottom: 0; width: 280px;
+    transform: translateX(-100%); border-right: 1px solid var(--line);
+    background: var(--paper); height: 100%;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    #sidebar { transition: transform 0.25s ease; }
+  }
+  body.nav-open #sidebar { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.2); }
+  #scrim { display: none; position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,0.35); }
+  body.nav-open #scrim { display: block; }
+  main { padding: 0 20px 90px; }
+  .masthead { margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+  .cell, .trace-idx span { width: 44px; }
+  .cell { height: 44px; font-size: 13.5px; }
+}
+</style>
+<div id="topbar">
+  <button id="menuBtn" aria-label="Open navigation">☰ index</button>
+  <span class="brand-name">LLD<span class="tick">_</span>LAB</span>
+</div>
+<div id="scrim"></div>
+
+<div id="app">
+<aside id="sidebar">
+  <div class="brand">
+    <span class="brand-name">LLD<span class="tick">_</span>LAB</span>
+    <span class="brand-sub">machine coding · deliberate practice</span>
+  </div>
+  <span class="setchip">SCAFFOLD LIVE · NEXT: SET L0</span>
+  <div class="progress">
+    <span class="progress-label"><span>understood</span><span id="progressCount">0 / 0</span></span>
+    <div class="progress-bar"><i id="progressFill"></i></div>
+  </div>
+  <input id="navFilter" class="navfilter" type="text" placeholder="filter sections…" aria-label="Filter navigation">
+  <nav id="nav" aria-label="Sections"></nav>
+</aside>
+
+<main>
+<div class="inner">
+
+<div class="masthead">
+  <h1>LLD Lab<span class="cursor">▍</span></h1>
+  <p>Low-level design, one set at a time: SOLID and the patterns as violation→refactor pairs, then the machine-coding classics with staged model answers — attempt each stage before you open it. Your journal and re-design schedule live in this page and persist in this browser.</p>
+  <div class="setrow">
+    <span class="setchip">TRACK: SETS L0 → L7</span>
+    <a class="setchip" href="../">DSA LAB →</a>
+    <a class="setchip" href="../hld/">HLD LAB →</a>
+  </div>
+</div>
+
+<!-- ================= DESK ================= -->
+<section class="sec" id="desk" data-nav="◇ Today" data-group="Desk">
+  <p class="eyebrow"><span class="dim">§◇</span> · YOUR DESK</p>
+  <h2>Today</h2>
+  <div class="trace-stats">
+    <div class="stat"><b>understood</b><span id="dkUnderstood">–</span></div>
+    <div class="stat"><b>designed</b><span id="dkSolved">–</span></div>
+    <div class="stat stat--hit"><b>re-designs due</b><span id="dkDue">–</span></div>
+    <div class="stat stat--count"><b>journal answered</b><span id="dkJournal">–</span></div>
+    <div class="stat"><b>cards to clear</b><span id="dkMiss">–</span></div>
+  </div>
+  <h3>Due for re-design</h3>
+  <div class="desk-due" id="deskDue"></div>
+</section>
+
+<!-- ================= ATLAS ================= -->
+<section class="sec" id="atlas" data-nav="00 · LLD atlas" data-group="Roadmap">
+  <p class="eyebrow"><span class="dim">§00</span> · THE FULL MAP — MACHINE CODING</p>
+  <h2>The LLD atlas — every set, one table</h2>
+  <p>Low-level design rounds grade one thing above all: when the interviewer says <em>“now also support X”</em>, does your design answer with a new class or with painful edits? Everything in this track builds toward passing that extension test. Learn top to bottom; each set assumes the ones before it.</p>
+  <div class="tblwrap"><table class="tbl tbl--atlas">
+    <tr><th>Set</th><th>Topic</th><th>The skill it builds</th><th>Anchor questions</th><th>Done</th></tr>
+<tr><td class="m">L0</td><td><strong>OOP done right</strong></td><td>objects as responsibilities; interfaces; composition over inheritance; just-enough UML</td><td>refactor drills</td><td class="set">—</td></tr><tr><td class="m">L1</td><td><strong>SOLID</strong></td><td>each principle taught as a violation → refactor pair</td><td>god-class autopsies</td><td class="set">—</td></tr><tr><td class="m">L2</td><td><strong>Patterns · tier S</strong></td><td>Strategy · Factory · Builder · Observer · Decorator · Singleton (and its sins)</td><td>pricing engines, notifiers, config builders</td><td class="set">—</td></tr><tr><td class="m">L3</td><td><strong>Patterns · tier A</strong></td><td>State · Command · Adapter · Facade · Proxy · Chain of Responsibility · Template Method</td><td>vending states, undo stacks, middleware</td><td class="set">—</td></tr><tr><td class="m">L4</td><td><strong>The interview method</strong></td><td>requirements → entities → behavior → pattern (justified) → skeleton → the extension test</td><td>Parking Lot · Elevator · Vending Machine · Tic-Tac-Toe</td><td class="set">—</td></tr><tr><td class="m">L5</td><td><strong>Machine-coding classics</strong></td><td>where offers are decided — full designs under time</td><td>Splitwise · BookMyShow · Chess · Rate Limiter · Logger</td><td class="set">—</td></tr><tr><td class="m">L6</td><td><strong>Concurrency in design</strong></td><td>thread-safety, immutability, locks vs atomics, safe publication</td><td>thread-safe LRU · connection pool · producer-consumer</td><td class="set">—</td></tr><tr><td class="m">L7</td><td><strong>Bosses</strong></td><td>end-to-end designs graded under extension pressure</td><td>Food delivery · Payment flow · In-memory DB with transactions</td><td class="set">—</td></tr>
+  </table></div>
+  <div class="callout"><span class="callout-label">Where LLD rounds actually happen</span><p>Amazon (SDE2+ loops, usually before the HLD round), Atlassian, Uber, Flipkart/Swiggy-tier product companies — almost always as live machine coding. Google and Meta skip the explicit round, but every hour here still pays: this vocabulary is how HLD components are described.</p></div>
+</section>
+
+<!-- ================= GUIDES ================= -->
+<section class="sec" id="guide-script" data-nav="★ The LLD script" data-group="Guides">
+  <p class="eyebrow"><span class="dim">§★</span> · THE MACHINE-CODING HOUR</p>
+  <h2>The LLD interview script</h2>
+  <ol>
+    <li><strong>Freeze the scope (5 min).</strong> Enumerate the use cases out loud, and ask the one question that decides your abstractions: <em>“what extensions are likely?”</em> Their answer tells you where to put the interfaces.</li>
+    <li><strong>Nouns → entities, verbs → behaviors (5 min).</strong> Read the requirements twice: once circling nouns (candidate classes), once circling verbs (candidate methods). Say which nouns are real entities and which are just attributes.</li>
+    <li><strong>Relationships + a quick class diagram (5 min).</strong> Has-a vs is-a, cardinalities (one Building has many Floors has many Slots). Prefer has-a; inheritance must earn its place.</li>
+    <li><strong>Allocate behavior and name each pattern WITH its justification (5–10 min).</strong> “Pricing varies by vehicle type and will grow — Strategy.” The pattern name without the reason scores nothing.</li>
+    <li><strong>Code interfaces first, then concretes (15–20 min).</strong> A working thin slice beats a complete skeleton. Narrate decisions, not syntax.</li>
+    <li><strong>The extension test (5–10 min).</strong> They WILL say “now add X”. If step 4 was right, your answer is a new class implementing an existing interface — Open/Closed demonstrated live. This moment is the round’s real grade.</li>
+    <li><strong>Edges and tests if time.</strong> Concurrency mention, invalid inputs, capacity limits.</li>
+  </ol>
+  <div class="callout"><span class="callout-label">What’s actually graded</span><p>Scope discipline (step 1), abstraction placement (step 4), the extension answer (step 6), and whether the code runs. Beautiful UML with broken code loses to ugly diagrams with a working slice.</p></div>
+  <div class="sec-foot"><button class="btn understood" data-sec="guide-script">Mark understood</button></div>
+</section>
+
+<section class="sec" id="guide-route" data-nav="★ Signal router" data-group="Guides">
+  <p class="eyebrow"><span class="dim">§★</span> · A REQUIREMENT WALKS IN</p>
+  <h2>The signal router — requirement phrase → design move</h2>
+  <div class="dtree">
+    <div class="dtree-q"><b>1.</b> “We might add more X later” (payment methods, pricing rules, notification channels) <span class="goto">→ Strategy — the behavior becomes a pluggable interface</span></div>
+    <div class="dtree-q"><b>2.</b> Creating objects is conditional or complicated <span class="goto">→ Factory (which one) · Builder (how, step by step)</span></div>
+    <div class="dtree-q"><b>3.</b> When one thing changes, many others must react <span class="goto">→ Observer — publishers don’t know their subscribers</span></div>
+    <div class="dtree-q"><b>4.</b> Features stack in layers (logging + retry + compression…) <span class="goto">→ Decorator — wrap, don’t subclass-explode</span></div>
+    <div class="dtree-q"><b>5.</b> Behavior depends on what MODE the object is in <span class="goto">→ State — one class per mode, transitions explicit</span></div>
+    <div class="dtree-q"><b>6.</b> Undo / redo / queue / schedule operations <span class="goto">→ Command — reify the action as an object</span></div>
+    <div class="dtree-q"><b>7.</b> Incompatible interface, or a subsystem too messy to expose <span class="goto">→ Adapter · Facade</span></div>
+    <div class="dtree-q"><b>8.</b> “Exactly one of these, shared everywhere” <span class="goto">→ Singleton — then immediately name its sins (hidden coupling, testing pain)</span></div>
+  </div>
+  <div class="sec-foot"><button class="btn understood" data-sec="guide-route">Mark understood</button></div>
+</section>
+
+<!-- ================= LADDER ================= -->
+<section class="sec" id="ladder-sec" data-nav="Practice ladder" data-group="Drills">
+  <p class="eyebrow"><span class="dim">§∞</span> · RUN THE PROTOCOL ON EACH</p>
+  <h2>Practice ladder</h2>
+  <div class="callout"><span class="callout-label">Protocol per design</span><p>Read only the requirements → 30-minute attempt on paper (diagram + key decisions) → open the staged model answer one fold at a time → journal (Requirements / Choices / Trade-offs / What I missed) → re-design blank on day +3 and day +10.</p></div>
+  <div class="ladder" id="ladder"></div>
+</section>
+
+<section class="sec" id="drill-deck" data-nav="Signal drill" data-group="Drills">
+  <p class="eyebrow"><span class="dim">§∞</span> · REQUIREMENT → DESIGN MOVE</p>
+  <h2>Signal drill — flashcards</h2>
+  <p>Each card is a phrase from a real requirements conversation; answer with the design move it should trigger. The deck grows with every set; misses are saved and lead the next shuffle.</p>
+  <div class="deck" id="deck">
+    <div class="deck-head"><span>signal → move</span><span id="deckCount">— left</span></div>
+    <div class="card" id="card" tabindex="0" role="button" aria-label="Flashcard — click to flip">
+      <span class="face-label" id="cardLabel">signal</span>
+      <span class="face-text" id="cardText"></span>
+    </div>
+    <div class="quiz-opts" id="quizOpts" hidden></div>
+    <div class="deck-ctrl" id="deckCtrl">
+      <button class="btn btn--primary" id="flipBtn">Flip</button>
+      <button class="btn" id="gotBtn" hidden>Got it</button>
+      <button class="btn" id="againBtn" hidden>Again</button>
+      <button class="btn" id="quizBtn">Quiz me</button>
+      <button class="btn" id="shuffleBtn">Reshuffle</button>
+    </div>
+  </div>
+</section>
+
+<div class="appfoot">
+  <p class="m">// This lab grows one set at a time — feed it via DESIGN-PROMPT.md and each set arrives with staged model answers, diagrams, ladder entries, flashcards, and journal drills.</p>
+</div>
+
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'lld-lab-v1';
+  var state = { understood: {}, journal: {}, ladder: {}, cardMiss: {} };
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) state = Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+  var saveTimer = null;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      renderDesk();
+    }, 250);
+  }
+
+  /* nav */
+  var sections = Array.prototype.slice.call(document.querySelectorAll('section.sec'));
+  var nav = document.getElementById('nav');
+  var groups = {}, groupOrder = [], navLinks = {};
+  sections.forEach(function (sec) {
+    var g = sec.getAttribute('data-group');
+    if (!groups[g]) { groups[g] = []; groupOrder.push(g); }
+    groups[g].push(sec);
+  });
+  groupOrder.forEach(function (g) {
+    var wrap = document.createElement('div');
+    wrap.className = 'navgroup';
+    var label = document.createElement('span');
+    label.className = 'navgroup-label';
+    label.textContent = g;
+    wrap.appendChild(label);
+    groups[g].forEach(function (sec) {
+      var a = document.createElement('a');
+      a.className = 'navlink';
+      a.href = '#' + sec.id;
+      a.innerHTML = '<span>' + sec.getAttribute('data-nav') + '</span><span class="check">✓</span>';
+      a.addEventListener('click', function () { document.body.classList.remove('nav-open'); });
+      wrap.appendChild(a);
+      navLinks[sec.id] = a;
+    });
+    nav.appendChild(wrap);
+  });
+  if ('IntersectionObserver' in window) {
+    var active = null;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          if (active) active.classList.remove('active');
+          active = navLinks[en.target.id];
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+
+  /* understood + progress */
+  var uBtns = Array.prototype.slice.call(document.querySelectorAll('.understood'));
+  function renderUnderstood() {
+    var done = 0;
+    uBtns.forEach(function (btn) {
+      var id = btn.getAttribute('data-sec');
+      var on = !!state.understood[id];
+      if (on) done++;
+      btn.textContent = on ? '✓ Understood' : 'Mark understood';
+      btn.classList.toggle('btn--on', on);
+      var link = navLinks[id];
+      if (link) link.classList.toggle('done', on);
+    });
+    document.getElementById('progressCount').textContent = done + ' / ' + uBtns.length;
+    document.getElementById('progressFill').style.width =
+      (uBtns.length ? Math.round(done / uBtns.length * 100) : 0) + '%';
+  }
+  uBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-sec');
+      state.understood[id] = !state.understood[id];
+      save();
+      renderUnderstood();
+    });
+  });
+  renderUnderstood();
+
+  /* mobile nav */
+  document.getElementById('menuBtn').addEventListener('click', function () {
+    document.body.classList.toggle('nav-open');
+  });
+  document.getElementById('scrim').addEventListener('click', function () {
+    document.body.classList.remove('nav-open');
+  });
+
+  /* ladder */
+  var LADDER = [];
+  var SET_LABELS = {};
+  function addDays(iso, d) {
+    var dt = new Date(iso + 'T12:00:00');
+    dt.setDate(dt.getDate() + d);
+    return dt;
+  }
+  function fmt(dt) { return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  var ladderEl = document.getElementById('ladder');
+  function renderLadder() {
+    ladderEl.innerHTML = '';
+    if (!LADDER.length) {
+      var note = document.createElement('div');
+      note.className = 'due-none';
+      note.textContent = 'The ladder fills as sets arrive — feed the lab its first set and the problems appear here with +3d / +10d re-design scheduling.';
+      ladderEl.appendChild(note);
+      return;
+    }
+    var lastSet = null, num = 0;
+    LADDER.forEach(function (p) {
+      if (p.set !== lastSet) {
+        lastSet = p.set; num = 0;
+        var lbl = document.createElement('div');
+        lbl.className = 'ladder-set-label';
+        lbl.textContent = SET_LABELS[p.set] || p.set;
+        ladderEl.appendChild(lbl);
+      }
+      num++;
+      var st = state.ladder[p.key] || {};
+      var rung = document.createElement('div');
+      rung.className = 'rung';
+      var top = document.createElement('div');
+      top.className = 'rung-top';
+      top.innerHTML = '<span class="rung-num">' + String(num).padStart(2, '0') + '</span>'
+        + '<span class="rung-name">' + p.name + '</span>'
+        + '<span class="rung-focus">' + p.focus + '</span>';
+      rung.appendChild(top);
+      var meta = document.createElement('div');
+      meta.className = 'rung-meta';
+      if (!st.solvedOn) {
+        var solveBtn = document.createElement('button');
+        solveBtn.className = 'btn';
+        solveBtn.textContent = 'Mark designed today';
+        solveBtn.addEventListener('click', function () {
+          state.ladder[p.key] = Object.assign({}, st, { solvedOn: todayISO(), r3: false, r10: false });
+          save(); renderLadder();
+        });
+        meta.appendChild(solveBtn);
+      } else {
+        var solved = document.createElement('span');
+        solved.textContent = 'designed ' + fmt(new Date(st.solvedOn + 'T12:00:00'));
+        meta.appendChild(solved);
+        [[3, 'r3'], [10, 'r10']].forEach(function (pair) {
+          var days = pair[0], k = pair[1];
+          var due = addDays(st.solvedOn, days);
+          var chip = document.createElement('button');
+          var isDone = !!st[k];
+          var isDue = !isDone && new Date() >= due;
+          chip.className = 'due-chip' + (isDone ? ' done' : '') + (isDue ? ' due' : '');
+          chip.textContent = '+' + days + 'd · ' + fmt(due) + (isDone ? ' ✓' : isDue ? ' · due' : '');
+          chip.addEventListener('click', function () {
+            st[k] = !st[k];
+            state.ladder[p.key] = st;
+            save(); renderLadder();
+          });
+          meta.appendChild(chip);
+        });
+        var reset = document.createElement('button');
+        reset.className = 'reset';
+        reset.textContent = 'reset';
+        reset.addEventListener('click', function () {
+          delete st.solvedOn; delete st.r3; delete st.r10;
+          state.ladder[p.key] = st;
+          save(); renderLadder();
+        });
+        meta.appendChild(reset);
+      }
+      rung.appendChild(meta);
+      var ta = document.createElement('textarea');
+      ta.className = 'journal';
+      ta.placeholder = 'Requirements:\nChoices:\nTrade-offs:\nWhat I missed:';
+      ta.value = st.notes || '';
+      ta.addEventListener('input', function () {
+        st.notes = ta.value;
+        state.ladder[p.key] = st;
+        save();
+      });
+      rung.appendChild(ta);
+      ladderEl.appendChild(rung);
+    });
+  }
+  renderLadder();
+
+  /* flashcards + quiz */
+  var CARDS = [
+    { q: '"we might add more payment methods later"', a: 'Strategy — pluggable behavior behind an interface' },
+    { q: '"when an order ships, notify email, SMS and the seller"', a: 'Observer — the order must not know its listeners' },
+    { q: '"features stack: logging + retry + compression"', a: 'Decorator — wrap, don\'t subclass-explode' },
+    { q: '"the machine behaves differently when idle / paid / dispensing"', a: 'State — one class per mode, explicit transitions' },
+    { q: '"support undo and operation history"', a: 'Command — make each action an object' },
+    { q: '"construction takes many optional parameters"', a: 'Builder — step-by-step construction, readable call site' }
+  ];
+  var queue = [], flipped = false, firstTry = 0, seenCount = 0, missedNow = {};
+  var quizOn = false, quizAnswered = false, quizRight = 0, quizSeen = 0;
+  var cardEl = document.getElementById('card');
+  var flipBtn = document.getElementById('flipBtn');
+  var gotBtn = document.getElementById('gotBtn');
+  var againBtn = document.getElementById('againBtn');
+  var quizBtn = document.getElementById('quizBtn');
+  var quizOpts = document.getElementById('quizOpts');
+  function missCount(i) { return state.cardMiss[i] || 0; }
+  function shuffleDeck() {
+    queue = CARDS.map(function (_, i) { return i; });
+    for (var i = queue.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = queue[i]; queue[i] = queue[j]; queue[j] = t;
+    }
+    queue.sort(function (a, b) { return missCount(b) - missCount(a); });
+    flipped = false; firstTry = 0; seenCount = 0; missedNow = {};
+    quizAnswered = false; quizRight = 0; quizSeen = 0;
+    renderDeck();
+  }
+  function deckHead() {
+    document.getElementById('deckCount').textContent = quizOn
+      ? (queue.length + ' left · score ' + quizRight + '/' + quizSeen)
+      : (queue.length + ' left');
+  }
+  function renderDeck() {
+    var label = document.getElementById('cardLabel');
+    var text = document.getElementById('cardText');
+    quizOpts.hidden = !quizOn;
+    quizOpts.innerHTML = '';
+    if (queue.length === 0) {
+      label.textContent = 'pass complete';
+      text.className = 'face-text';
+      text.textContent = quizOn
+        ? ('quiz done — ' + quizRight + ' of ' + quizSeen + ' right. Misses lead the next shuffle.')
+        : (firstTry + ' of ' + seenCount + ' first-try.');
+      cardEl.classList.remove('flipped');
+      flipBtn.hidden = true; gotBtn.hidden = true; againBtn.hidden = true;
+      deckHead();
+      return;
+    }
+    var c = CARDS[queue[0]];
+    deckHead();
+    if (quizOn) {
+      label.textContent = 'which move?';
+      text.className = 'face-text';
+      text.textContent = c.q;
+      cardEl.classList.remove('flipped');
+      flipBtn.hidden = true; againBtn.hidden = true;
+      gotBtn.textContent = 'Next →';
+      gotBtn.hidden = !quizAnswered;
+      var opts = [c.a], guard = 0;
+      while (opts.length < Math.min(4, CARDS.length) && guard++ < 500) {
+        var cand = CARDS[Math.floor(Math.random() * CARDS.length)].a;
+        if (opts.indexOf(cand) === -1) opts.push(cand);
+      }
+      for (var i = opts.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = opts[i]; opts[i] = opts[j]; opts[j] = t;
+      }
+      opts.forEach(function (o) {
+        var b = document.createElement('button');
+        b.className = 'quiz-opt';
+        b.textContent = o;
+        b.addEventListener('click', function () {
+          if (quizAnswered) return;
+          quizAnswered = true;
+          quizSeen++;
+          var idx = queue[0];
+          var right = (o === CARDS[idx].a);
+          if (right) {
+            quizRight++;
+            if (state.cardMiss[idx]) state.cardMiss[idx]--;
+          } else {
+            state.cardMiss[idx] = missCount(idx) + 1;
+            missedNow[idx] = true;
+          }
+          save();
+          Array.prototype.forEach.call(quizOpts.children, function (btn) {
+            btn.disabled = true;
+            if (btn.textContent === CARDS[idx].a) btn.classList.add('right');
+            else if (btn === b) btn.classList.add('wrong');
+          });
+          gotBtn.hidden = false;
+          deckHead();
+        });
+        quizOpts.appendChild(b);
+      });
+      return;
+    }
+    gotBtn.textContent = 'Got it';
+    if (!flipped) {
+      label.textContent = 'requirement signal';
+      text.className = 'face-text';
+      text.textContent = c.q;
+      cardEl.classList.remove('flipped');
+      flipBtn.hidden = false; gotBtn.hidden = true; againBtn.hidden = true;
+    } else {
+      label.textContent = 'design move';
+      text.className = 'face-text answer';
+      text.textContent = c.a;
+      cardEl.classList.add('flipped');
+      flipBtn.hidden = true; gotBtn.hidden = false; againBtn.hidden = false;
+    }
+  }
+  function flip() { if (!quizOn && queue.length) { flipped = !flipped; renderDeck(); } }
+  cardEl.addEventListener('click', flip);
+  cardEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); }
+  });
+  flipBtn.addEventListener('click', function (e) { e.stopPropagation(); flip(); });
+  gotBtn.addEventListener('click', function () {
+    var idx = queue.shift();
+    if (quizOn) {
+      if (missedNow[idx]) { delete missedNow[idx]; queue.push(idx); }
+      quizAnswered = false;
+      renderDeck();
+      return;
+    }
+    if (!missedNow[idx]) firstTry++;
+    seenCount++;
+    if (state.cardMiss[idx]) { state.cardMiss[idx]--; save(); }
+    flipped = false;
+    renderDeck();
+  });
+  againBtn.addEventListener('click', function () {
+    var idx = queue.shift();
+    if (!missedNow[idx]) { seenCount++; missedNow[idx] = true; }
+    state.cardMiss[idx] = missCount(idx) + 1;
+    save();
+    queue.push(idx);
+    flipped = false;
+    renderDeck();
+  });
+  document.getElementById('shuffleBtn').addEventListener('click', shuffleDeck);
+  quizBtn.addEventListener('click', function () {
+    quizOn = !quizOn;
+    quizBtn.textContent = quizOn ? 'Flashcards' : 'Quiz me';
+    quizAnswered = false; quizRight = 0; quizSeen = 0;
+    flipped = false;
+    renderDeck();
+  });
+  shuffleDeck();
+
+  /* journal boxes (arrive with sets) */
+  document.querySelectorAll('textarea[data-jkey]').forEach(function (ta) {
+    var k = ta.getAttribute('data-jkey');
+    ta.value = state.journal[k] || '';
+    ta.addEventListener('input', function () {
+      state.journal[k] = ta.value;
+      save();
+    });
+  });
+
+  /* step players (configs arrive with sets) */
+  var PLAYERS = {};
+  document.querySelectorAll('[data-player]').forEach(function (el) {
+    var cfg = PLAYERS[el.getAttribute('data-player')];
+    if (!cfg) return;
+    var idx = 0;
+    var frame = el.querySelector('.player-frame');
+    var note = el.querySelector('.p-note');
+    var stepEl = el.querySelector('.p-step');
+    var prev = el.querySelector('.p-prev'), next = el.querySelector('.p-next'), reset = el.querySelector('.p-reset');
+    function render() {
+      var s = cfg.steps[idx];
+      frame.textContent = s.f;
+      note.innerHTML = s.n;
+      stepEl.textContent = 'step ' + idx + ' / ' + (cfg.steps.length - 1);
+      prev.disabled = idx === 0;
+      next.disabled = idx === cfg.steps.length - 1;
+    }
+    prev.addEventListener('click', function () { if (idx > 0) { idx--; render(); } });
+    next.addEventListener('click', function () { if (idx < cfg.steps.length - 1) { idx++; render(); } });
+    reset.addEventListener('click', function () { idx = 0; render(); });
+    render();
+  });
+
+  /* desk */
+  function renderDesk() {
+    var listEl = document.getElementById('deskDue');
+    if (!listEl) return;
+    var uDone = 0;
+    uBtns.forEach(function (b) { if (state.understood[b.getAttribute('data-sec')]) uDone++; });
+    var solved = 0, due = [];
+    var now = new Date();
+    LADDER.forEach(function (p) {
+      var st = state.ladder[p.key] || {};
+      if (!st.solvedOn) return;
+      solved++;
+      [[3, 'r3'], [10, 'r10']].forEach(function (pair) {
+        if (!st[pair[1]] && now >= addDays(st.solvedOn, pair[0])) {
+          due.push(p.name + '   (+' + pair[0] + 'd was due ' + fmt(addDays(st.solvedOn, pair[0])) + ')');
+        }
+      });
+    });
+    var jAll = document.querySelectorAll('textarea[data-jkey]').length;
+    var jDone = 0;
+    document.querySelectorAll('textarea[data-jkey]').forEach(function (ta) {
+      if ((state.journal[ta.getAttribute('data-jkey')] || '').trim()) jDone++;
+    });
+    var missed = 0;
+    for (var k in state.cardMiss) { if (state.cardMiss[k] > 0) missed++; }
+    document.getElementById('dkUnderstood').textContent = uDone + '/' + uBtns.length;
+    document.getElementById('dkSolved').textContent = solved + '/' + LADDER.length;
+    document.getElementById('dkDue').textContent = due.length;
+    document.getElementById('dkJournal').textContent = jDone + '/' + jAll;
+    document.getElementById('dkMiss').textContent = missed;
+    listEl.innerHTML = '';
+    if (!due.length) {
+      var d = document.createElement('div');
+      d.className = 'due-none';
+      d.textContent = 'Nothing due. Mark designs done in the ladder to schedule +3d / +10d blank re-designs.';
+      listEl.appendChild(d);
+    } else {
+      due.forEach(function (t) {
+        var d = document.createElement('div');
+        d.className = 'due-alert';
+        d.textContent = t;
+        listEl.appendChild(d);
+      });
+    }
+  }
+  renderDesk();
+
+  /* nav filter */
+  var navFilterEl = document.getElementById('navFilter');
+  if (navFilterEl) {
+    navFilterEl.addEventListener('input', function () {
+      var q = navFilterEl.value.trim().toLowerCase();
+      document.querySelectorAll('#nav .navgroup').forEach(function (g) {
+        var groupHit = g.querySelector('.navgroup-label').textContent.toLowerCase().indexOf(q) !== -1;
+        var any = false;
+        g.querySelectorAll('.navlink').forEach(function (a) {
+          var hit = !q || groupHit || a.textContent.toLowerCase().indexOf(q) !== -1;
+          a.style.display = hit ? '' : 'none';
+          if (hit) any = true;
+        });
+        g.style.display = any ? '' : 'none';
+      });
+    });
+  }
+})();
+</script>
