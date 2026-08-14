@@ -530,7 +530,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <span class="brand-name">LLD<span class="tick">_</span>LAB</span>
     <span class="brand-sub">machine coding · deliberate practice</span>
   </div>
-  <span class="setchip">SCAFFOLD LIVE · NEXT: SET L0</span>
+  <span class="setchip">SETS L0–L1 LIVE · NEXT: L2 · SOLID</span>
   <div class="progress">
     <span class="progress-label"><span>understood</span><span id="progressCount">0 / 0</span></span>
     <div class="progress-bar"><i id="progressFill"></i></div>
@@ -574,7 +574,16 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   <p>Low-level design rounds grade one thing above all: when the interviewer says <em>“now also support X”</em>, does your design answer with a new class or with painful edits? Everything in this track builds toward passing that extension test. Learn top to bottom; each set assumes the ones before it.</p>
   <div class="tblwrap"><table class="tbl tbl--atlas">
     <tr><th>Set</th><th>Topic</th><th>The skill it builds</th><th>Anchor questions</th><th>Done</th></tr>
-<tr><td class="m">L0</td><td><strong>OOP done right</strong></td><td>objects as responsibilities; interfaces; composition over inheritance; just-enough UML</td><td>refactor drills</td><td class="set">—</td></tr><tr><td class="m">L1</td><td><strong>SOLID</strong></td><td>each principle taught as a violation → refactor pair</td><td>god-class autopsies</td><td class="set">—</td></tr><tr><td class="m">L2</td><td><strong>Patterns · tier S</strong></td><td>Strategy · Factory · Builder · Observer · Decorator · Singleton (and its sins)</td><td>pricing engines, notifiers, config builders</td><td class="set">—</td></tr><tr><td class="m">L3</td><td><strong>Patterns · tier A</strong></td><td>State · Command · Adapter · Facade · Proxy · Chain of Responsibility · Template Method</td><td>vending states, undo stacks, middleware</td><td class="set">—</td></tr><tr><td class="m">L4</td><td><strong>The interview method</strong></td><td>requirements → entities → behavior → pattern (justified) → skeleton → the extension test</td><td>Parking Lot · Elevator · Vending Machine · Tic-Tac-Toe</td><td class="set">—</td></tr><tr><td class="m">L5</td><td><strong>Machine-coding classics</strong></td><td>where offers are decided — full designs under time</td><td>Splitwise · BookMyShow · Chess · Rate Limiter · Logger</td><td class="set">—</td></tr><tr><td class="m">L6</td><td><strong>Concurrency in design</strong></td><td>thread-safety, immutability, locks vs atomics, safe publication</td><td>thread-safe LRU · connection pool · producer-consumer</td><td class="set">—</td></tr><tr><td class="m">L7</td><td><strong>Bosses</strong></td><td>end-to-end designs graded under extension pressure</td><td>Food delivery · Payment flow · In-memory DB with transactions</td><td class="set">—</td></tr>
+    <tr><td class="m">L0</td><td><strong>Objects from zero</strong></td><td>classes, objects, self, identity vs equality, encapsulation as rule-guarding</td><td>BankAccount · Money · LibraryCard</td><td class="set"><span class="done">L0 ✓</span></td></tr>
+    <tr><td class="m">L1</td><td><strong>The four pillars</strong></td><td>abstraction/interfaces, inheritance, polymorphism, composition-over-inheritance, UML-lite</td><td>PaymentMethod · Notifier · the engine swap</td><td class="set"><span class="done">L1 ✓</span></td></tr>
+    <tr><td class="m">L2</td><td><strong>Good design vocabulary + SOLID</strong></td><td>coupling/cohesion, DRY/KISS/YAGNI, each SOLID principle as violation → refactor</td><td>god-class autopsies</td><td class="set">—</td></tr>
+    <tr><td class="m">L3</td><td><strong>The everyday six</strong></td><td>Strategy · Factory · Builder · Singleton (and sins) · Observer · Decorator</td><td>pricing engines, notifiers, config builders</td><td class="set">—</td></tr>
+    <tr><td class="m">L4</td><td><strong>The situational eight</strong></td><td>State · Command · Adapter · Facade · Proxy · Chain · Template · Composite</td><td>vending states, undo stacks, middleware</td><td class="set">—</td></tr>
+    <tr><td class="m">L5</td><td><strong>The method + first classics</strong></td><td>scope freeze → nouns/verbs → patterns justified → skeleton → extension test</td><td>Tic-Tac-Toe · Parking Lot · Vending Machine</td><td class="set">—</td></tr>
+    <tr><td class="m">L6</td><td><strong>Core classics</strong></td><td>one dominant pattern each — recognition training</td><td>Elevator · Snake &amp; Ladder · Library / Hotel booking</td><td class="set">—</td></tr>
+    <tr><td class="m">L7</td><td><strong>Offer-deciders</strong></td><td>multi-pattern composition under time pressure</td><td>Splitwise · BookMyShow · Logger · Rate Limiter · Chess</td><td class="set">—</td></tr>
+    <tr><td class="m">L8</td><td><strong>Concurrency band</strong></td><td>threads, races, locks vs atomics, immutability, safe publication</td><td>thread-safe LRU · connection pool · producer-consumer</td><td class="set">—</td></tr>
+    <tr><td class="m">L9</td><td><strong>Bosses</strong></td><td>end-to-end designs graded under extension pressure</td><td>Food delivery · Payment flow · In-memory DB</td><td class="set">—</td></tr>
   </table></div>
   <div class="callout"><span class="callout-label">Where LLD rounds actually happen</span><p>Amazon (SDE2+ loops, usually before the HLD round), Atlassian, Uber, Flipkart/Swiggy-tier product companies — almost always as live machine coding. Google and Meta skip the explicit round, but every hour here still pays: this vocabulary is how HLD components are described.</p></div>
 </section>
@@ -610,6 +619,420 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <div class="dtree-q"><b>8.</b> “Exactly one of these, shared everywhere” <span class="goto">→ Singleton — then immediately name its sins (hidden coupling, testing pain)</span></div>
   </div>
   <div class="sec-foot"><button class="btn understood" data-sec="guide-route">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l0-theory" data-nav="L0.1 · What an object is" data-group="Set L0 · Objects from zero">
+  <p class="eyebrow"><span class="dim">§L0.1</span> · SET L0 — OBJECTS FROM ZERO</p>
+  <h2>What an object even is — and why anyone bothered</h2>
+  <p><strong>Start with the problem, not the feature.</strong> Every program is two things: data (numbers, text, lists) and functions that change the data. In a small script they can live loose — a few variables here, a few functions there. As a program grows, a disease sets in: <em>many</em> functions touch the <em>same</em> data, and nothing stops any of them from breaking its rules. One day <code class="ic">balance</code> is −500 and forty functions could have done it.</p>
+  <p><strong>OOP is one move against that disease:</strong> bundle a piece of data together with the only functions allowed to touch it, into a single unit — and give the unit a name. The <em>design</em> of such a unit is a <strong>class</strong>. Each unit actually built from the design is an <strong>object</strong>.</p>
+  <p><strong>Now the real-life picture.</strong> A bank designs ONE model of ATM: the screen, the keypad, the cash tray, and — most importantly — the rules of operation (you cannot withdraw more than the tray holds). Then it builds thousands of physical machines from that one design. Every machine behaves the same way, but each holds <em>its own</em> cash. Pressing “withdraw” in Delhi does not move a rupee in Mumbai. The design = the class. Each street machine = an object.</p>
+<figure class="fig"><svg viewBox="0 0 640 190" role="img" aria-label="One class, many objects">
+<rect class="dg-boxa" x="30" y="55" width="190" height="80" rx="4"/>
+<text class="dg-ta" x="125" y="80" text-anchor="middle">class BankAccount</text>
+<text class="dg-td" x="125" y="100" text-anchor="middle">the design: fields + rules</text>
+<text class="dg-td" x="125" y="118" text-anchor="middle">__init__ · deposit · withdraw</text>
+<line class="dg-ea" x1="220" y1="80" x2="330" y2="55"/><polygon class="dg-fa" points="330,55 318,53 322,62"/>
+<line class="dg-ea" x1="220" y1="115" x2="330" y2="140"/><polygon class="dg-fa" points="330,140 318,137 321,146"/>
+<rect class="dg-box" x="340" y="20" width="250" height="66" rx="4"/>
+<text class="dg-t" x="465" y="44" text-anchor="middle">object #1</text>
+<text class="dg-td" x="465" y="66" text-anchor="middle">owner: 'Deep' · balance: 500</text>
+<rect class="dg-box" x="340" y="106" width="250" height="66" rx="4"/>
+<text class="dg-t" x="465" y="130" text-anchor="middle">object #2</text>
+<text class="dg-td" x="465" y="152" text-anchor="middle">owner: 'Asha' · balance: 0</text>
+</svg><figcaption>One design, many built things. Same methods on both, but each object carries its own data — touching one never touches the other.</figcaption></figure>
+  <p><strong>The vocabulary, once, in plain words:</strong> a <strong>field</strong> (attribute) is something an object <em>knows</em> (its owner, its balance). A <strong>method</strong> is something it <em>can do</em> (deposit). The <strong>constructor</strong> (<code class="ic">__init__</code>) is its birth certificate — the code that runs once when the object is created and fills in its starting data. And <strong>self</strong> is the simplest of all: <em>“the particular object this call is about.”</em></p>
+<pre class="code"><code data-lang="python">class BankAccount:
+    def __init__(self, owner):      # the constructor: runs at birth
+        self.owner = owner          # THIS object's own data
+        self.balance = 0
+
+    def deposit(self, amount):
+        self.balance += amount
+
+a = BankAccount("Deep")
+b = BankAccount("Asha")
+a.deposit(500)
+print(a.balance, b.balance)         # 500 0 — two separate boxes</code></pre>
+  <p><strong>The one line that demystifies self forever:</strong> <code class="ic">a.deposit(500)</code> is just polite spelling for <code class="ic">BankAccount.deposit(a, 500)</code>. Python passes the object in front of the dot as the first argument. That argument is called self by convention — it could be named anything, and it always means “this one”.</p>
+<div class="trace player" data-player="obj-life">
+    <div class="trace-head"><span>STEP THROUGH · THE LIFE OF AN OBJECT</span><span class="p-step">step 0</span></div>
+    <pre class="code player-frame"></pre>
+    <p class="trace-note p-note"></p>
+    <div class="trace-ctrl"><button class="btn p-prev">← Prev</button><button class="btn btn--primary p-next">Next →</button><button class="btn p-reset">Restart</button></div>
+  </div>
+<details class="reveal reveal--check"><summary>Check yourself: after the code above runs, what does b.deposit(200); print(a.balance) show?</summary><div class="reveal-body"><p>500 — untouched. Inside that call, self points at b’s box; a’s box is never visited. If this feels obvious, good: that instinct IS object thinking.</p></div></details>
+<details class="reveal reveal--plain"><summary>Going deeper — what Python actually does under the hood<span class="hint">optional depth</span></summary><div class="reveal-body">
+<p>An object in Python is essentially a small dictionary of its attributes plus a link to its class. <code class="ic">a.balance</code> means: look in a’s own dict first, then in the class. That is why two objects can hold different data while sharing one set of methods — the data lives per-object, the methods live once, on the class.</p>
+<p>And a fact that will pay off later: <em>everything</em> in Python is an object — integers, strings, functions, even classes themselves. <code class="ic">type(5)</code> is a class. You have been using objects all along; now you get to design them.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l0-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l0-a" data-nav="L0.2 · Instance vs class data" data-group="Set L0 · Objects from zero">
+  <p class="eyebrow"><span class="dim">§L0.2</span> · SET L0 — OBJECTS FROM ZERO</p>
+  <h2>Two homes for data — and the bug that lives between them</h2>
+  <p><strong>Concept first.</strong> A class can hold two kinds of data, and confusing them causes one of the most common bugs in beginner OOP. <strong>Instance data</strong> belongs to one object: written as <code class="ic">self.something</code>, created inside <code class="ic">__init__</code>, different for every object. <strong>Class data</strong> belongs to the design itself: written directly in the class body, and — this is the point — <em>shared by every object built from it</em>.</p>
+  <p><strong>Real life:</strong> every library membership card carries its own member name and its own list of borrowed books (instance data). But all cards share the library’s name and the borrow limit “max 3 books” (class data). If the library raises the limit to 5, it changes for every card at once — that’s exactly what shared means.</p>
+<pre class="code"><code data-lang="python">class LibraryCard:
+    LIBRARY = "Indiranagar Public Library"   # class data: shared by ALL cards
+    MAX_BOOKS = 3
+
+    def __init__(self, member):
+        self.member = member                 # instance data: this card only
+        self.borrowed = []                   # created fresh PER OBJECT — crucial
+
+    def borrow(self, book):
+        if len(self.borrowed) &gt;= LibraryCard.MAX_BOOKS:
+            raise ValueError("borrow limit reached")
+        self.borrowed.append(book)</code></pre>
+  <p><strong>Now the famous bug.</strong> Move <code class="ic">borrowed = []</code> up into the class body, and it becomes ONE shared list — every card appends into the same object. Why? You met the reason in the DSA lab’s §F.4: assignment copies <em>arrows</em>, not things. A mutable class attribute is one thing with many arrows pointing at it.</p>
+<details class="reveal reveal--check"><summary>Check yourself: with borrowed = [] as a CLASS attribute, card1.borrow("Gitanjali") runs. What does card2.borrowed show?</summary><div class="reveal-body"><p>["Gitanjali"] — card2 sees card1’s book, because there is only one list in existence and both cards’ lookups find it on the class. The fix is one line: create the list in __init__ so each card gets its own. Same disease, same cure as the [[0]*n]*m grid trap.</p></div></details>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ The sibling trap — mutable default arguments</span>
+    <p><code class="ic">def __init__(self, borrowed=[])</code> has the same disease from a different door: Python builds that default list ONCE, when the function is defined, and every object that doesn’t pass its own list shares it. The idiom: default to <code class="ic">None</code>, then <code class="ic">self.borrowed = borrowed if borrowed is not None else []</code>.</p>
+  </div>
+  <p><strong>The rule to keep:</strong> constants and truly-shared settings → class body, in CAPS. Anything an object owns — especially anything mutable — → created in <code class="ic">__init__</code>. When in doubt, it belongs in __init__.</p>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l0-a">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l0-b" data-nav="L0.3 · Identity vs equality" data-group="Set L0 · Objects from zero">
+  <p class="eyebrow"><span class="dim">§L0.3</span> · SET L0 — OBJECTS FROM ZERO</p>
+  <h2>“The same object” vs “an equal object”</h2>
+  <p><strong>Concept first.</strong> There are two different questions you can ask about two objects, and beginner code goes wrong by treating them as one. <em>Identity:</em> are these literally the same box in memory? (Python: <code class="ic">is</code>.) <em>Equality:</em> do these two boxes hold matching contents? (Python: <code class="ic">==</code>.) They are allowed to disagree — and often should.</p>
+  <p><strong>Real life:</strong> two crisp ₹500 notes. Equal in every way that matters for buying chai — but they are not the same note; each has its own serial number, its own paper. Meanwhile your Aadhaar card and a photocopy of it: same information, and yet for identity purposes only one is “the real one”.</p>
+<figure class="fig"><svg viewBox="0 0 640 170" role="img" aria-label="Identity vs equality — two banknotes">
+<rect class="dg-box" x="60" y="30" width="200" height="90" rx="6"/>
+<text class="dg-t" x="160" y="66" text-anchor="middle">₹500 note</text>
+<text class="dg-td" x="160" y="92" text-anchor="middle">serial: 2AB 114377</text>
+<rect class="dg-box" x="380" y="30" width="200" height="90" rx="6"/>
+<text class="dg-t" x="480" y="66" text-anchor="middle">₹500 note</text>
+<text class="dg-td" x="480" y="92" text-anchor="middle">serial: 7QX 990125</text>
+<text class="dg-ta" x="320" y="60" text-anchor="middle">equal value? YES (==)</text>
+<text class="dg-tw" x="320" y="100" text-anchor="middle">same note? NO (is)</text>
+<text class="dg-td" x="320" y="152" text-anchor="middle">two questions, two answers — Python keeps them separate on purpose</text>
+</svg><figcaption>Equality asks about contents; identity asks “is this literally the same box in memory?” Every object supports both questions, and they are allowed to disagree.</figcaption></figure>
+  <p><strong>The Python surprise that teaches the whole topic:</strong> by default, <code class="ic">==</code> on your own classes falls back to identity. Two freshly made Money(500) objects are <em>not equal</em> until you teach the class what equality should mean:</p>
+<pre class="code"><code data-lang="python">class Money:
+    def __init__(self, rupees):
+        self.rupees = rupees
+
+m1, m2 = Money(500), Money(500)
+print(m1 == m2)          # False!  default == is identity
+
+class Money:
+    def __init__(self, rupees):
+        self.rupees = rupees
+    def __eq__(self, other):                 # teach equality
+        return isinstance(other, Money) and self.rupees == other.rupees
+    def __hash__(self):                      # the partner rule — see below
+        return hash(self.rupees)
+
+print(Money(500) == Money(500))              # True — by value now</code></pre>
+  <p><strong>Why __hash__ came along:</strong> the moment you define __eq__, Python disables hashing for the class — because sets and dicts file things on shelves by hash (§F.3 of the DSA lab), and the law of that library is: <em>equal things must land on the same shelf</em>. Define what “equal” means, and you owe the shelf-number rule too: equal objects ⇒ equal hash. Hash the same fields you compare.</p>
+  <p><strong>The design vocabulary this unlocks:</strong> a <strong>value object</strong> is defined by its contents — Money, a date, a coordinate. Two with the same contents are interchangeable, so give them __eq__ by value. An <strong>entity</strong> is defined by its identity — a BankAccount, a User. Two accounts with identical balances are still different accounts; equality stays identity. Deciding “value or entity?” for each class you design is a real LLD interview skill, and you now own it.</p>
+<details class="reveal reveal--check"><summary>Check yourself: a = [1,2]; b = [1,2] — what do a == b and a is b print, and why?</summary><div class="reveal-body"><p>True, then False. Lists ship with contents-equality built in (Python defined __eq__ for you), but they are still two separate boxes. Exactly the two-notes picture.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l0-b">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l0-c" data-nav="L0.4 · Encapsulation" data-group="Set L0 · Objects from zero">
+  <p class="eyebrow"><span class="dim">§L0.4</span> · SET L0 — OBJECTS FROM ZERO</p>
+  <h2>Encapsulation — guarding rules, not hiding fields</h2>
+  <p><strong>Concept first, because this one is usually taught backwards.</strong> Encapsulation is not the ritual of making fields private and writing getters. It is this: <em>every object has rules about its own data that must never break</em> — “balance is never negative”, “a booking never exceeds capacity”. Such an always-true rule is called an <strong>invariant</strong>. The ONLY reliable way to protect an invariant is to force every change through methods that check it. If any code anywhere can write the field directly, your rule is a hope, not a guarantee.</p>
+  <p><strong>Real life:</strong> a bank vault. Customers never walk into the vault and rearrange cash — they talk to a teller, and the teller enforces the rules (“insufficient funds”). The teller window is the method; the vault is the private field. The building is designed so there is no other door.</p>
+<figure class="fig"><svg viewBox="0 0 640 190" role="img" aria-label="Encapsulation as a bank teller guarding a vault">
+<rect class="dg-box" x="200" y="20" width="380" height="150" rx="6"/>
+<text class="dg-td" x="390" y="42" text-anchor="middle">BankAccount object</text>
+<rect class="dg-boxw" x="410" y="70" width="140" height="66" rx="4"/>
+<text class="dg-tw" x="480" y="98" text-anchor="middle">_balance</text>
+<text class="dg-tw" x="480" y="118" text-anchor="middle">(the vault)</text>
+<rect class="dg-boxa" x="220" y="58" width="150" height="34" rx="4"/><text class="dg-ta" x="295" y="80" text-anchor="middle">deposit()</text>
+<rect class="dg-boxa" x="220" y="102" width="150" height="34" rx="4"/><text class="dg-ta" x="295" y="124" text-anchor="middle">withdraw()</text>
+<line class="dg-ea" x1="70" y1="75" x2="220" y2="75"/><polygon class="dg-fa" points="220,75 210,70 210,80"/>
+<line class="dg-ea" x1="70" y1="119" x2="220" y2="119"/><polygon class="dg-fa" points="220,119 210,114 210,124"/>
+<text class="dg-td" x="70" y="60" text-anchor="middle">callers</text>
+<path class="dg-ew" d="M 70 160 Q 260 185 410 130" fill="none"/>
+<line class="dg-ew" x1="230" y1="158" x2="254" y2="178"/><line class="dg-ew" x1="254" y1="158" x2="230" y2="178"/>
+<text class="dg-tw" x="150" y="182">reaching into the vault directly — the door the design closes</text>
+</svg><figcaption>Every change walks through a teller window (a method) that checks the rules. The vault itself is never handed to callers — that is all encapsulation is.</figcaption></figure>
+<pre class="code"><code data-lang="python">class BankAccount:
+    def __init__(self, owner):
+        self.owner = owner
+        self._balance = 0                    # _ means: staff door, keep out
+
+    def deposit(self, amount):
+        if amount &lt;= 0:
+            raise ValueError("deposit must be positive")
+        self._balance += amount
+
+    def withdraw(self, amount):
+        if amount &gt; self._balance:
+            raise ValueError("insufficient funds")   # the invariant, guarded
+        self._balance -= amount
+
+    @property
+    def balance(self):                       # read-only window into the vault
+        return self._balance</code></pre>
+  <p><strong>Python’s honesty policy:</strong> there is no true “private”. <code class="ic">_balance</code> is a convention (“staff only”), and even <code class="ic">__balance</code> (double underscore) is only name-mangled, not locked. Python’s culture says: mark the door clearly, and trust code review to keep people out. The <code class="ic">@property</code> gives outsiders a clean read-only view — and, beautifully, it means you can START with a plain public attribute and upgrade to a validated property later <em>without changing a single caller</em>. That upgrade path is why Python doesn’t need Java’s getter/setter ritual.</p>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ The leak nobody notices</span>
+    <p>A method that <em>returns the internal list itself</em> hands the vault keys out the window: <code class="ic">return self._transactions</code> lets the caller append fake entries. Return a copy (<code class="ic">list(self._transactions)</code>) or a tuple. Same aliasing arrow-picture as §F.4 — encapsulation can be broken by a return statement as easily as by an assignment.</p>
+  </div>
+<details class="reveal reveal--check"><summary>Check yourself: withdraw(5000) on a balance of 500 — should it return None quietly, return False, or raise? Argue it.</summary><div class="reveal-body"><p>Raise. A broken rule should be LOUD at the moment it breaks — silent None travels ten function-calls away before something else crashes, and the crime scene is cold. “Fail fast” is invariant-thinking applied to time.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l0-c">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l0-traps" data-nav="L0.5 · Traps & drill" data-group="Set L0 · Objects from zero">
+  <p class="eyebrow"><span class="dim">§L0.5</span> · BEFORE MOVING ON + INTERROGATION</p>
+  <h2>Traps, signals &amp; interrogation</h2>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span>Forgot <code class="ic">self</code> in a method signature — “takes 1 positional argument but 2 were given” is Python saying “where do I put the object?”</span></label></li>
+    <li><label><input type="checkbox"><span>Mutable class attribute (<code class="ic">borrowed = []</code> in the class body) — every object shares one list</span></label></li>
+    <li><label><input type="checkbox"><span>Mutable default argument (<code class="ic">def __init__(self, items=[])</code>) — same disease, different door</span></label></li>
+    <li><label><input type="checkbox"><span>Compared objects with <code class="ic">is</code> when you meant contents (<code class="ic">==</code>) — or defined __eq__ and forgot the __hash__ partner rule</span></label></li>
+    <li><label><input type="checkbox"><span>Returned the internal list itself — the caller can now bypass every guard</span></label></li>
+    <li><label><input type="checkbox"><span>Wrote to <code class="ic">obj._field</code> from outside — nothing crashes today; the invariant dies quietly tomorrow</span></label></li>
+    <li><label><input type="checkbox"><span>Getter/setter ceremony for every field — in Python, plain attributes now, @property when validation arrives</span></label></li>
+  </ul>
+  <h3>Interrogation — answer in your journal</h3>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L0.1</span><p class="jq-text">Explain, using the box picture, why a.deposit(500) cannot possibly touch b — where exactly does self point during that call, and who decided?</p></div>
+    <textarea class="journal" data-jkey="l0q1" placeholder="The box picture, in your own words…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Rewrite the call without the dot.</p><p><strong>Sketch:</strong> a.deposit(500) is BankAccount.deposit(a, 500) — Python passes the object before the dot as the first argument. self is bound to a’s box for the whole call; b’s box is simply never named anywhere in it.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L0.2</span><p class="jq-text">Money(500) == Money(500) is False out of the box. Why? Which two methods fix it, what law connects them, and which DSA-lab picture explains that law?</p></div>
+    <textarea class="journal" data-jkey="l0q2" placeholder="Default equality + the two methods + the law…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What does == fall back to when the class says nothing?</p><p><strong>Sketch:</strong> Default == is identity — two boxes, so False. Define __eq__ (compare contents) and __hash__ (hash those same contents). The law: equal objects must hash equal — because sets/dicts file by hash (§F.3’s shelves), and equal things must land on the same shelf to ever be found.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L0.3</span><p class="jq-text">Build the shared-list LibraryCard bug from memory, predict its exact wrong output for two cards, then fix it and say WHY the fix works using the arrow picture.</p></div>
+    <textarea class="journal" data-jkey="l0q3" placeholder="Bug, prediction, fix, arrows…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> How many list objects exist in the buggy version?</p><p><strong>Sketch:</strong> One. borrowed = [] in the class body builds a single list; every card’s lookup misses its own dict and finds the class’s — many arrows, one thing. Creating self.borrowed = [] in __init__ builds a fresh list per object: one arrow, one thing, each.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L0.4</span><p class="jq-text">A teammate writes acc._balance -= fee directly and the tests pass. In three sentences, argue why this is still a bug worth blocking in review.</p></div>
+    <textarea class="journal" data-jkey="l0q4" placeholder="Three sentences, invariant-flavored…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What did withdraw() know that this line skips?</p><p><strong>Sketch:</strong> The write bypasses the single choke point where the “never negative / sufficient funds” rule lives, so the invariant now depends on every caller’s memory instead of one method’s code. Tomorrow’s validation, logging, or notification added to withdraw() silently won’t apply here. Tests passing today only means today’s inputs were kind.</p></div></details>
+  </div>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l0-traps">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-theory" data-nav="L1.1 · The four pillars, mapped" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.1</span> · SET L1 — THE FOUR PILLARS</p>
+  <h2>The four pillars — one story before the details</h2>
+  <p>With objects in hand, four ideas make a <em>system</em> of objects manageable. Here they are in one household story, so the coming sections have a skeleton to hang on:</p>
+  <p><strong>Encapsulation</strong> you already own from L0: every appliance guards its own insides — you press buttons on the microwave; you never rewire it mid-cook. <strong>Abstraction</strong> is the wall socket: a simple promise (230V, this shape) hiding a power grid behind it — you design against the promise, not the machinery. <strong>Inheritance</strong> is “a new model based on an old one”: this year’s washing machine is last year’s, plus a steam mode — same everything else. <strong>Polymorphism</strong> is what makes the socket idea powerful: MANY different devices honor the same plug promise, so the wall never needs to know what arrived — one socket, a thousand behaviors.</p>
+  <p>And the working lesson this set builds to, the one that decides real interviews: when you must choose between “X <em>is a</em> Y” (inheritance) and “X <em>has a</em> Y” (composition), <strong>composition wins whenever you’re unsure</strong> — because a slot can be re-plugged at runtime, while a family tree is forever. Section L1.4 shows the failure that makes this rule stick.</p>
+<details class="reveal reveal--plain"><summary>In plain English — why exactly four, and are they sacred?<span class="hint">optional depth</span></summary><div class="reveal-body">
+<p>Nothing sacred — “four pillars” is just a teaching tradition. The honest grouping: encapsulation and abstraction are about <em>hiding</em> (one hides data behind rules, the other hides machinery behind promises); inheritance and polymorphism are about <em>reuse and variation</em> (one shares structure, the other varies behavior behind a shared face). If you remember only one sentence: <strong>depend on promises, guard your data, and prefer slots to family trees.</strong> Every principle and pattern for the rest of this lab is that sentence, elaborated.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-a" data-nav="L1.2 · Abstraction & interfaces" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.2</span> · SET L1 — THE FOUR PILLARS</p>
+  <h2>Abstraction — code that depends on a promise</h2>
+  <p><strong>Concept first.</strong> An <strong>interface</strong> is a written promise-list: “whatever you are, you can <code class="ic">pay(amount)</code>”. Code that depends only on the promise works with every keeper of the promise — including keepers <em>that don’t exist yet</em>. That last clause is the entire magic, so read it twice: the future-proofing is the point.</p>
+<figure class="fig"><svg viewBox="0 0 640 200" role="img" aria-label="An interface is a wall socket standard">
+<rect class="dg-boxa" x="230" y="16" width="180" height="70" rx="6"/>
+<text class="dg-ta" x="320" y="44" text-anchor="middle">the socket standard</text>
+<text class="dg-td" x="320" y="66" text-anchor="middle">promise: 230V, this shape</text>
+<rect class="dg-box" x="60" y="130" width="140" height="52" rx="4"/><text class="dg-t" x="130" y="152" text-anchor="middle">lamp</text><text class="dg-td" x="130" y="170" text-anchor="middle">1962</text>
+<rect class="dg-box" x="250" y="130" width="140" height="52" rx="4"/><text class="dg-t" x="320" y="152" text-anchor="middle">laptop charger</text><text class="dg-td" x="320" y="170" text-anchor="middle">2020</text>
+<rect class="dg-boxw" x="440" y="130" width="140" height="52" rx="4"/><text class="dg-tw" x="510" y="152" text-anchor="middle">future device</text><text class="dg-tw" x="510" y="170" text-anchor="middle">2035 — still fits</text>
+<line class="dg-e" x1="130" y1="128" x2="280" y2="88"/>
+<line class="dg-e" x1="320" y1="128" x2="320" y2="88"/>
+<line class="dg-e" x1="510" y1="128" x2="360" y2="88"/>
+</svg><figcaption>The wall was built decades before the laptop existed, yet the laptop works — because both sides depend only on the promise, never on each other.</figcaption></figure>
+  <p><strong>In Python</strong>, formal promises are abstract base classes; a class that inherits one MUST implement the promised methods or it cannot even be instantiated:</p>
+<pre class="code"><code data-lang="python">from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):                    # the socket standard
+    @abstractmethod
+    def pay(self, amount): ...
+
+class UPI(PaymentMethod):
+    def pay(self, amount):
+        print(f"UPI request for ₹{amount}")
+
+class Card(PaymentMethod):
+    def pay(self, amount):
+        print(f"Charging card ₹{amount}")
+
+def checkout(cart_total, method: PaymentMethod):
+    # this function knows ONLY the promise. Nothing else.
+    method.pay(cart_total)</code></pre>
+  <p><strong>Watch the extension test pass in week one:</strong> next month the business adds wallets. You write <code class="ic">class Wallet(PaymentMethod)</code> with its own pay() — and <code class="ic">checkout</code> is not edited, not retested for old paths, not even reopened. New behavior arrived; existing code stood still. Interviews grade exactly this moment.</p>
+<details class="reveal reveal--check"><summary>Check yourself: the anti-pattern: checkout does if isinstance(method, UPI): ... elif isinstance(method, Card): ... — what breaks when Wallet arrives?</summary><div class="reveal-body"><p>checkout itself must be edited — the promise was ignored and the machinery leaked in. Every new method means reopening tested code. An isinstance-ladder inside business logic is the #1 sign an interface is missing.</p></div></details>
+<details class="reveal reveal--plain"><summary>Going deeper — Python’s informal interfaces (duck typing)<span class="hint">optional depth</span></summary><div class="reveal-body">
+<p>Python also honors unwritten promises: if an object simply HAS a pay() method, checkout works — no ABC needed. “If it walks like a duck and quacks like a duck…” This is duck typing, and it is idiomatic Python. Use the ABC when you want the promise <em>written down and enforced</em> (a team, an interview whiteboard); rely on ducks for small internal code. In interviews, write the ABC — it shows you know where the contract lives.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-a">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-b" data-nav="L1.3 · Inheritance & polymorphism" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.3</span> · SET L1 — THE FOUR PILLARS</p>
+  <h2>Inheritance and polymorphism — one call, many behaviors</h2>
+  <p><strong>Concept first.</strong> Inheritance: build a new class as “an existing class, keep most, change some”. The child <em>is a</em> parent — anywhere a parent is expected, a child may stand. <strong>Overriding</strong>: the child replaces a method with its own version. And <strong>polymorphism</strong> is what happens at the call site: the code says <code class="ic">n.send(msg)</code> once, and whichever object is actually standing there answers in its own way. Python decides <em>at runtime, from the actual object</em> — this is called dynamic dispatch, and it is why one loop can drive a hundred behaviors.</p>
+  <p><strong>Real life:</strong> a company’s alert system. Policy says “notify everyone on the on-call list” — it does not say how each person prefers to be reached. One colleague gets email, one gets SMS, one gets a push notification. The POLICY is one loop; the VARIATION lives in each channel:</p>
+<pre class="code"><code data-lang="python">class Notifier:
+    def send(self, user, msg):
+        raise NotImplementedError
+
+class EmailNotifier(Notifier):
+    def send(self, user, msg):
+        print(f"email to {user}: {msg}")
+
+class SMSNotifier(Notifier):
+    def send(self, user, msg):
+        print(f"sms to {user}: {msg}")
+
+class PushNotifier(Notifier):
+    def send(self, user, msg):
+        print(f"push to {user}: {msg}")
+
+def alert(oncall, channels, msg):
+    for user in oncall:
+        for ch in channels:              # ONE call site…
+            ch.send(user, msg)           # …many behaviors, chosen at runtime</code></pre>
+  <p><strong>super(), in plain words:</strong> “run the parent’s version too, then add my part.” A Manager’s __init__ calls <code class="ic">super().__init__(name, id)</code> so the Employee half of it is set up by the code that owns that job — never duplicate the parent’s setup by hand.</p>
+  <p><strong>When is inheritance the right tool?</strong> Three checks, all required: the sentence “X is a Y” rings true out loud; the child keeps <em>every</em> promise the parent makes (no overriding a method to raise “not supported” — that lie has a name, Liskov, coming in L2); and there is genuinely shared behavior worth inheriting. Fail any one → reach for the next section’s tool.</p>
+<details class="reveal reveal--check"><summary>Check yourself: channels = [EmailNotifier(), SMSNotifier()] — how many times is the WORD send written in alert(), and how many behaviors run?</summary><div class="reveal-body"><p>Written once, behaviors two (per user). That gap — one call site, n behaviors — is polymorphism’s entire value: adding PushNotifier changes the list you pass in, not the loop.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-b">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-c" data-nav="L1.4 · Composition over inheritance" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.4</span> · SET L1 — THE FOUR PILLARS · THE FLAGSHIP LESSON</p>
+  <h2>Composition over inheritance — slots beat family trees</h2>
+  <p><strong>The failure story first, because the rule means nothing without the pain.</strong> You’re building game characters. Some walk, some fly, some swim — so you make Walker, Flyer, Swimmer subclasses. Then design asks for a character that flies AND swims. Then an armored flyer. Every <em>combination</em> of abilities demands its own class: n abilities → 2ⁿ classes, most of them copy-paste. Worse: a character can never <em>change</em> — the decision was welded into its family tree at birth.</p>
+<figure class="fig"><svg viewBox="0 0 640 220" role="img" aria-label="Inheritance explosion versus composition">
+<text class="dg-tw" x="160" y="20" text-anchor="middle">inheritance: one class per combination</text>
+<rect class="dg-box" x="110" y="30" width="100" height="30" rx="4"/><text class="dg-td" x="160" y="50" text-anchor="middle">Character</text>
+<rect class="dg-box" x="20" y="90" width="84" height="28" rx="4"/><text class="dg-td" x="62" y="108" text-anchor="middle">Walker</text>
+<rect class="dg-box" x="118" y="90" width="84" height="28" rx="4"/><text class="dg-td" x="160" y="108" text-anchor="middle">Flyer</text>
+<rect class="dg-box" x="216" y="90" width="84" height="28" rx="4"/><text class="dg-td" x="258" y="108" text-anchor="middle">Swimmer</text>
+<rect class="dg-boxw" x="20" y="150" width="130" height="28" rx="4"/><text class="dg-tw" x="85" y="168" text-anchor="middle">FlyingSwimmer</text>
+<rect class="dg-boxw" x="170" y="150" width="130" height="28" rx="4"/><text class="dg-tw" x="235" y="168" text-anchor="middle">ArmoredFlyer…</text>
+<text class="dg-tw" x="160" y="204" text-anchor="middle">n abilities → 2ⁿ classes</text>
+<line class="dg-e" x1="330" y1="16" x2="330" y2="208" stroke-dasharray="4 4"/>
+<text class="dg-ta" x="490" y="20" text-anchor="middle">composition: slots + plug-ins</text>
+<rect class="dg-boxa" x="380" y="40" width="220" height="64" rx="4"/>
+<text class="dg-ta" x="490" y="64" text-anchor="middle">Character</text>
+<text class="dg-td" x="490" y="86" text-anchor="middle">move: ⟨slot⟩ · attack: ⟨slot⟩</text>
+<rect class="dg-box" x="380" y="130" width="100" height="30" rx="4"/><text class="dg-td" x="430" y="150" text-anchor="middle">FlyMove</text>
+<rect class="dg-box" x="500" y="130" width="100" height="30" rx="4"/><text class="dg-td" x="550" y="150" text-anchor="middle">SwimMove</text>
+<line class="dg-ea" x1="430" y1="128" x2="460" y2="106"/>
+<line class="dg-ea" x1="550" y1="128" x2="520" y2="106"/>
+<text class="dg-ta" x="490" y="204" text-anchor="middle">n abilities → n small classes, combined freely</text>
+</svg><figcaption>Freeze the decision into the family tree and every combination needs a new class. Put it in a slot and combinations are free — and swappable at runtime.</figcaption></figure>
+  <p><strong>The composition move:</strong> stop asking “what IS this character?” and ask “what does it HAVE?” Give the class <em>slots</em>, and put behavior objects in the slots. Combinations become free; swapping becomes a one-line assignment — even mid-game:</p>
+<pre class="code"><code data-lang="python">class Engine(ABC):
+    @abstractmethod
+    def start(self): ...
+
+class PetrolEngine(Engine):
+    def start(self): return "vroom (petrol, 12 km/l)"
+
+class ElectricEngine(Engine):
+    def start(self): return "whirr (electric, 7 km/kWh)"
+
+class Car:
+    def __init__(self, engine: Engine):
+        self.engine = engine             # the slot
+    def drive(self):
+        return self.engine.start()       # ask whatever is plugged in
+
+car = Car(PetrolEngine())
+car.drive()                              # vroom
+car.engine = ElectricEngine()            # swap AT RUNTIME — no new class
+car.drive()                              # whirr</code></pre>
+<div class="trace player" data-player="engine-swap">
+    <div class="trace-head"><span>STEP THROUGH · THE ENGINE SWAP</span><span class="p-step">step 0</span></div>
+    <pre class="code player-frame"></pre>
+    <p class="trace-note p-note"></p>
+    <div class="trace-ctrl"><button class="btn p-prev">← Prev</button><button class="btn btn--primary p-next">Next →</button><button class="btn p-reset">Restart</button></div>
+  </div>
+  <p><strong>The decision rule, out loud:</strong> say the sentence. “A car IS an engine” — absurd → has-a → composition. “A manager IS an employee” — true, promises kept → is-a is fine. And when the sentence could go either way, choose composition: a slot keeps the decision changeable; a parent class does not. (Quiet spoiler: what you just built — a slot holding swappable behavior — has a formal name, <em>Strategy</em>. Set L3 will introduce it as an old friend.)</p>
+<details class="reveal reveal--check"><summary>Check yourself: the interviewer says: “now cars can also have a sunroof, a music system, or both.” Inheritance answer vs composition answer?</summary><div class="reveal-body"><p>Inheritance: SunroofCar, MusicCar, SunroofMusicCar… — the 2ⁿ explosion again. Composition: a features list (or named slots) on Car holding small feature objects; both = two entries in the list. New feature next month = one new class, Car untouched.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-c">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-d" data-nav="L1.5 · Supporting cast + UML-lite" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.5</span> · SET L1 — THE FOUR PILLARS</p>
+  <h2>The supporting cast — enums, statics, and just-enough UML</h2>
+  <p><strong>Enums — for fixed menus of values.</strong> Order status is exactly one of PLACED / PACKED / SHIPPED / DELIVERED. Model that with strings and a typo (<code class="ic">"shiped"</code>) sails through every check, corrupting data quietly. An Enum makes the menu a real type: typos fail loudly at the line that wrote them, and your editor autocompletes the choices.</p>
+<pre class="code"><code data-lang="python">from enum import Enum
+
+class OrderStatus(Enum):
+    PLACED = "placed"
+    PACKED = "packed"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+
+order.status = OrderStatus.SHIPPED        # not a string — a member of the menu
+if order.status is OrderStatus.DELIVERED: # identity comparison — safe and fast
+    ...</code></pre>
+  <p><strong>Class methods as named constructors.</strong> <code class="ic">Money.from_paise(4999)</code> reads better than Money(49.99) with a comment. A <code class="ic">@classmethod</code> receives the class itself and builds the object — you’ll meet this again as the Factory pattern’s little sibling.</p>
+  <p><strong>Value object vs entity — now formalized</strong> (you met it in L0.3): value objects (Money, DateRange, Coordinates) compare by contents, are best made immutable, and Python’s <code class="ic">@dataclass(frozen=True)</code> writes the boilerplate for you. Entities (User, Order, Account) compare by identity and carry an id. In an interview, sorting your nouns into these two buckets is often the first minute of modeling.</p>
+  <p><strong>UML-lite — the four arrows you may draw in an interview:</strong></p>
+<figure class="fig"><svg viewBox="0 0 640 220" role="img" aria-label="The four UML arrows worth knowing">
+<line class="dg-e" x1="40" y1="40" x2="180" y2="40"/><polygon class="dg-fm" points="180,40 168,35 168,45"/>
+<text class="dg-t" x="210" y="44">association — “knows about” · Member → Loan</text>
+<line class="dg-e" x1="40" y1="90" x2="168" y2="90"/><polygon class="dg-box" points="180,90 164,82 164,98"/>
+<text class="dg-t" x="210" y="94">inheritance (hollow triangle) — “is a” · EBook ▷ Book</text>
+<line class="dg-e" x1="52" y1="140" x2="180" y2="140"/><polygon class="dg-fa" points="40,140 52,133 52,147"/>
+<text class="dg-t" x="210" y="144">composition (filled diamond at the owner) — “part of” · Library ◆ Shelf</text>
+<line class="dg-e" x1="40" y1="190" x2="180" y2="190" stroke-dasharray="6 4"/><polygon class="dg-fm" points="180,190 168,185 168,195"/>
+<text class="dg-t" x="210" y="194">dependency (dashed) — “uses briefly” · Checkout ⤏ NotificationService</text>
+</svg><figcaption>Four arrows cover 95% of interview whiteboards. Boxes get two compartments: name on top, key methods below. Timebox the drawing — five minutes, never twenty.</figcaption></figure>
+  <p>Boxes get two compartments — name, then the 3–4 methods that matter. Draw for five minutes maximum, then code; the diagram is a communication tool, not the deliverable. (The lab’s DESIGN sections will always show diagrams in exactly this dialect.)</p>
+<details class="reveal reveal--check"><summary>Check yourself: Library ◆— Shelf vs Member —→ Book: why a filled diamond for one and a plain arrow for the other?</summary><div class="reveal-body"><p>Shelves are PART OF the library — destroy the library and its shelves go with it (composition, filled diamond at the owner). A member merely KNOWS ABOUT the books they borrowed — books outlive membership (association, plain arrow). The arrow encodes lifetime and ownership, not just “uses”.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-d">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l1-traps" data-nav="L1.6 · Traps & drill" data-group="Set L1 · The four pillars">
+  <p class="eyebrow"><span class="dim">§L1.6</span> · BEFORE MOVING ON + INTERROGATION</p>
+  <h2>Traps, signals &amp; interrogation</h2>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span>Inheritance for code reuse without is-a — <code class="ic">class Stack(list)</code> leaks insert/pop-anywhere; a Stack that isn’t stack-like</span></label></li>
+    <li><label><input type="checkbox"><span>A child overriding a parent method to raise “not supported” — the promise is broken; substitutability dies (Liskov, formally, in L2)</span></label></li>
+    <li><label><input type="checkbox"><span>Hierarchies deeper than ~2 levels — a smell that combinations are being modeled as ancestry</span></label></li>
+    <li><label><input type="checkbox"><span>isinstance-ladders inside business logic — the missing-interface siren</span></label></li>
+    <li><label><input type="checkbox"><span>Forgot <code class="ic">super().__init__(...)</code> — the parent’s half of the object silently never exists</span></label></li>
+    <li><label><input type="checkbox"><span>Status/size/type as raw strings — enums exist so typos fail loudly</span></label></li>
+    <li><label><input type="checkbox"><span>Twenty minutes of UML, zero minutes of code — five-minute diagrams, then build</span></label></li>
+  </ul>
+  <h3>Interrogation — answer in your journal</h3>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L1.1</span><p class="jq-text">Map the wall-socket story onto the payment code: what plays the socket, the devices, the 230V promise — and what code smell corresponds to “rewiring the wall for every new device”?</p></div>
+    <textarea class="journal" data-jkey="l1q1" placeholder="Socket ↔ code mapping…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> The promise is a method signature.</p><p><strong>Sketch:</strong> Socket = PaymentMethod ABC; devices = UPI/Card/Wallet; the 230V promise = the pay(amount) signature and its meaning; rewiring the wall = isinstance-ladders inside checkout, which force edits for every new device. The socket works for 2035’s devices because both sides depend only on the promise.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L1.2</span><p class="jq-text">class Stack(list): show one concrete call a user can make that breaks stack-ness, then fix the design with composition and say what the fix hides.</p></div>
+    <textarea class="journal" data-jkey="l1q2" placeholder="The breaking call + the refactor…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What can every list do that no stack should?</p><p><strong>Sketch:</strong> s.insert(0, x) — jumping the queue at the bottom. Fix: Stack HAS a list (self._items) and exposes only push/pop/peek. Composition lets you inherit nothing and expose exactly the promise a stack makes — the inner list becomes vault, not ancestry.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L1.3</span><p class="jq-text">The penguin problem: Bird has fly(); Penguin(Bird) overrides fly() to raise. Explain which pillar’s guarantee just died, and redesign the birds with composition so nobody lies.</p></div>
+    <textarea class="journal" data-jkey="l1q3" placeholder="The dead guarantee + the redesign…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> What may code holding a Bird safely assume?</p><p><strong>Sketch:</strong> Substitutability: any Bird can stand where Bird is expected — a raising fly() makes that false, so polymorphic code now needs isinstance checks, defeating the point. Redesign: Bird HAS a movement slot; FlyMove for sparrows, WaddleSwimMove for penguins. Every bird keeps every promise it actually makes.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L1.4</span><p class="jq-text">Design on paper (arrows only, 5 minutes): a food-court smart card system — Card, Vendor, Transaction, TopUpMachine. Which of the four arrows connects each pair, and why?</p></div>
+    <textarea class="journal" data-jkey="l1q4" placeholder="Pairs + arrows + one-line reasons…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Ask lifetime and ownership for each pair.</p><p><strong>Sketch:</strong> Card —→ Transaction: association (a card knows its transactions; they outlive nothing together… actually they belong to the card’s history — a ◆ is defensible if transactions die with the card; say your assumption out loud). Vendor ⤏ Card: dependency (touches it briefly to charge). TopUpMachine ⤏ Card: dependency. If you add Wallet-vs-Meal balance types: Balance as a value object inside Card (◆). The grading is the REASONS, not the arrows.</p></div></details>
+  </div>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l1-traps">Mark understood</button></div>
 </section>
 
 <!-- ================= LADDER ================= -->
@@ -744,8 +1167,19 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   });
 
   /* ladder */
-  var LADDER = [];
-  var SET_LABELS = {};
+  var LADDER = [
+    { set: 'L0', key: 'bank-account', name: 'Build BankAccount properly', focus: 'invariant: balance never negative — all writes through guarded methods' },
+    { set: 'L0', key: 'money-value', name: 'Money as a value object', focus: 'define __eq__ and __hash__; state the equal→same-hash rule' },
+    { set: 'L0', key: 'library-card', name: 'Fix the shared-state LibraryCard', focus: 'find and fix the mutable class attribute bug' },
+    { set: 'L1', key: 'payment-interface', name: 'Checkout against an interface', focus: 'add Wallet without touching checkout — the extension test' },
+    { set: 'L1', key: 'notifier-poly', name: 'Three notifiers, one loop', focus: 'polymorphism: one send() call site, many behaviors' },
+    { set: 'L1', key: 'engine-swap', name: 'Refactor the class explosion', focus: 'inheritance tree → composed abilities, swap at runtime' },
+    { set: 'L1', key: 'uml-food-card', name: '20-minute UML: food-court card', focus: 'Card, Vendor, Transaction, TopUpMachine — pick each arrow deliberately' }
+  ];
+  var SET_LABELS = {
+    'L0': 'Set L0 · Objects from zero',
+    'L1': 'Set L1 · The four pillars'
+  };
   function addDays(iso, d) {
     var dt = new Date(iso + 'T12:00:00');
     dt.setDate(dt.getDate() + d);
@@ -848,7 +1282,15 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     { q: '"features stack: logging + retry + compression"', a: 'Decorator — wrap, don\'t subclass-explode' },
     { q: '"the machine behaves differently when idle / paid / dispensing"', a: 'State — one class per mode, explicit transitions' },
     { q: '"support undo and operation history"', a: 'Command — make each action an object' },
-    { q: '"construction takes many optional parameters"', a: 'Builder — step-by-step construction, readable call site' }
+    { q: '"construction takes many optional parameters"', a: 'Builder — step-by-step construction, readable call site' },
+    { q: '"two objects hold identical data — same thing?"', a: 'entities: no (identity, is) · value objects: yes, once you define __eq__' },
+    { q: '"a rule about this data must ALWAYS hold"', a: 'an invariant — force every write through a checking method' },
+    { q: '"every object mysteriously shares the same list"', a: 'mutable class attribute (or default arg) — create it in __init__' },
+    { q: '"callers keep reaching into our object and breaking it"', a: 'encapsulate: _private field, guarded methods, @property' },
+    { q: '"X IS a Y, and keeps every promise Y makes"', a: 'inheritance is justified — is-a plus full substitutability' },
+    { q: '"X HAS a Y / this behavior might need swapping"', a: 'composition — a slot holding a promise-keeper, swappable at runtime' },
+    { q: '"the code is a ladder of if isinstance(...) checks"', a: 'polymorphism — one promise, many keepers; let dispatch choose' },
+    { q: '"a fixed menu of allowed values (statuses, sizes)"', a: 'Enum — typos fail loudly, strings fail silently' }
   ];
   var queue = [], flipped = false, firstTry = 0, seenCount = 0, missedNow = {};
   var quizOn = false, quizAnswered = false, quizRight = 0, quizSeen = 0;
@@ -1005,7 +1447,32 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
   });
 
   /* step players (configs arrive with sets) */
-  var PLAYERS = {};
+  var PLAYERS = {
+    'obj-life': { steps: [
+      { f: 'class BankAccount:        # the blueprint is read\n    __init__ / deposit / ...\n\nmemory:  (no objects yet)',
+        n: 'Defining a class builds nothing — it only teaches Python the design. No account exists yet.' },
+      { f: "a = BankAccount('Deep')\n\nmemory:  box#1 { owner: 'Deep', balance: 0 }\n         a ──▶ box#1",
+        n: 'The constructor runs once and builds ONE box. Inside __init__, <strong>self pointed at box#1</strong> — that is all self ever is: “the box this call is about”.' },
+      { f: "b = BankAccount('Asha')\n\nmemory:  box#1 { owner: 'Deep', balance: 0 }\n         box#2 { owner: 'Asha', balance: 0 }",
+        n: 'Same blueprint, a brand-new box. Two objects, two separate sets of data.' },
+      { f: 'a.deposit(500)\n\nmemory:  box#1 { owner: \'Deep\', balance: 500 }   << changed\n         box#2 { owner: \'Asha\', balance: 0 }     unchanged',
+        n: 'Python quietly rewrites this call as BankAccount.deposit(a, 500) — <strong>a becomes self</strong>, so only box#1 is touched.' },
+      { f: 'print(b.balance)   ->  0\n\na is b   ->  False   (two different boxes)',
+        n: 'Proof of separation. And a preview of the next section: <code>is</code> asks “same box?” — which these never were.' }
+    ]},
+    'engine-swap': { steps: [
+      { f: 'car = Car(PetrolEngine())\n\nCar box#1\n  engine ──▶ PetrolEngine box',
+        n: 'The Car HAS an engine — a slot holding some object that keeps the Engine promise. The Car neither knows nor cares which kind.' },
+      { f: "car.drive()\n\n-> 'vroom  (petrol, 12 km/l)'",
+        n: 'Car.drive() just says self.engine.start(). The petrol object answers in its own way.' },
+      { f: 'car.engine = ElectricEngine()\n\nCar box#1\n  engine ──▶ ElectricEngine box   << swapped AT RUNTIME',
+        n: 'One assignment. No new Car subclass, no edits to Car. The slot now holds a different promise-keeper.' },
+      { f: "car.drive()\n\n-> 'whirr  (electric, 7 km/kWh)'",
+        n: 'Same object, same method call, new behavior. This is what composition buys that inheritance cannot: <strong>decisions that stay changeable after birth</strong>.' },
+      { f: 'tomorrow: class HydrogenEngine(Engine): ...\n\nCar: UNTOUCHED\ncheckout/drive code: UNTOUCHED',
+        n: 'The interviewer’s “now add X” answered with one new class. That is the extension test — and you just passed it with a concept from week one.' }
+    ]}
+  };
   document.querySelectorAll('[data-player]').forEach(function (el) {
     var cfg = PLAYERS[el.getAttribute('data-player')];
     if (!cfg) return;
