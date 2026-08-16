@@ -3000,6 +3000,18 @@ while queue:
     <p>(1) <strong>Tree-ness:</strong> no cycles, single parent — that's why there is no visited set. Feed a cyclic graph to tree-DFS and it recurses forever; graphs get the visited set in Set 09. (2) <strong>Stack depth = tree height:</strong> a skewed tree of 10⁵ nodes blows Python's ~1000-frame default recursion limit — the fallback is an explicit-stack iterative version (or raising the limit, with the caveat said out loud). (3) <strong>BST tricks assume the property actually holds</strong> — and the property is global, not parent-child local (Type C's counterexample).</p>
   </div>
   <p><strong>Complexity tell:</strong> "each node visited exactly once, O(1) combine per visit" → <strong>O(n)</strong> — the tree version of the one-direction argument. Space is the traversal frontier: DFS holds a root-to-leaf path → <strong>O(h)</strong>, which is O(log n) balanced but O(n) skewed — always give both; BFS holds a level → O(w), up to n/2 on a complete tree's bottom level.</p>
+  <p><strong>The node model:</strong> a binary tree is a linked list that forks — nodes wired downward, nothing more. Every routine in this set assumes exactly this shape, so keep it in muscle memory:</p>
+<pre class="code"><code data-lang="python">class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left      # a TreeNode or None
+        self.right = right    # a TreeNode or None</code></pre>
+  <p><strong>Four traversals — and which question each one answers.</strong> The three depth-first orders are built from the <em>same three lines</em>; they differ by one thing only — <em>when</em> you touch the node relative to its two recursive calls. Learn the trigger, not the code:</p>
+<pre class="code"><code data-lang="none">preorder    node, then left, then right     root first     -> copy / serialize, print structure
+inorder     left, then node, then right     sorted on a BST -> read BST values in order
+postorder   left, then right, then node     children first  -> aggregate upward (height, sum, safe delete)
+level-order  BFS, one row at a time          nearest first  -> levels, shallowest / shortest-unweighted</code></pre>
+  <p>Three reflexes cover almost every prompt: <strong>"in order over a BST" ⇒ a sorted stream</strong>; <strong>"children before parent" ⇒ postorder ⇒ every aggregate problem</strong>; <strong>"per level / nearest" ⇒ BFS</strong>. Reach for DFS when the answer is a property of <em>subtrees</em> (most problems); reach for BFS when it is a property of <em>levels</em>, or when you want the shallowest hit and can stop the moment you find it. The next two sections turn all four into code you can reproduce cold.</p>
   
   <details class="reveal reveal--plain"><summary>In plain English — the same idea, slower<span class="hint">new here? start with this</span></summary><div class="reveal-body">
 <p>Think of a company org chart. When the CEO wants a total headcount, they don’t visit every employee — each manager asks their own reports, adds it up, and passes ONE number upward. Every level trusts the level below.</p>
@@ -3008,6 +3020,152 @@ while queue:
 <p>“Trust the recursion” = trust the managers. You verify two things only: the smallest team reports correctly (base case), and a manager combines correct reports correctly (the recursive step). You never audit the whole company at once — that’s §F.2’s induction trick.</p>
 <p>BFS is the other tour: floor by floor of the building instead of department by department. Use it when the QUESTION is about floors (levels, nearest, shortest unweighted path).</p></div></details>
   <div class="sec-foot"><button class="btn understood" data-sec="tr-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="tr-trav" data-nav="TR.1a · The four traversals" data-group="Set 06 · Trees">
+  <p class="eyebrow"><span class="dim">§TR.1a</span> · THE FOUR ORDERS · REPRODUCE COLD</p>
+  <h2>The four traversals — logic and code</h2>
+  <p>Before the typed problems, own the four ways to walk a tree. Everything downstream is one of these with a payload bolted on. We trace them all on one small tree:</p>
+  <figure class="fig"><svg viewBox="0 0 520 200" role="img" aria-label="Example tree used for the four traversal outputs">
+    <line class="dg-e" x1="250" y1="46" x2="192" y2="88"/>
+    <line class="dg-e" x1="250" y1="46" x2="358" y2="88"/>
+    <line class="dg-e" x1="178" y1="110" x2="142" y2="146"/>
+    <line class="dg-e" x1="198" y1="110" x2="248" y2="146"/>
+    <circle class="dg-boxa" cx="250" cy="36" r="18"/><text class="dg-t" x="250" y="41" text-anchor="middle">1</text>
+    <circle class="dg-box" cx="185" cy="98" r="18"/><text class="dg-t" x="185" y="103" text-anchor="middle">2</text>
+    <circle class="dg-box" cx="365" cy="98" r="18"/><text class="dg-t" x="365" y="103" text-anchor="middle">3</text>
+    <circle class="dg-box" cx="135" cy="158" r="18"/><text class="dg-t" x="135" y="163" text-anchor="middle">4</text>
+    <circle class="dg-box" cx="255" cy="158" r="18"/><text class="dg-t" x="255" y="163" text-anchor="middle">5</text>
+  </svg><figcaption>preorder 1 2 4 5 3 · inorder 4 2 5 1 3 · postorder 4 5 2 3 1 · level-order [[1],[2,3],[4,5]]</figcaption></figure>
+  <p><strong>Depth-first: one skeleton, three visit positions.</strong> The three recursive orders are the <em>same three lines</em> — the only change is where the "visit" sits relative to the two recursive calls. That is the entire difference; say it out loud and you will never mix them up.</p>
+<pre class="code"><code data-lang="python">def preorder(node, out):
+    if not node: return
+    out.append(node.val)        # visit BEFORE the calls  -> root, left, right
+    preorder(node.left, out)
+    preorder(node.right, out)
+
+def inorder(node, out):
+    if not node: return
+    inorder(node.left, out)
+    out.append(node.val)        # visit BETWEEN the calls -> left, root, right
+    inorder(node.right, out)
+
+def postorder(node, out):
+    if not node: return
+    postorder(node.left, out)
+    postorder(node.right, out)
+    out.append(node.val)        # visit AFTER the calls   -> left, right, root</code></pre>
+  <div class="callout">
+    <span class="callout-label">Why the visit position is the whole game</span>
+    <p><strong>Inorder</strong> emits a BST in sorted order because everything smaller (the left subtree) is fully drained before the node, and everything larger (the right) after it — that is §TR.4's identity in one sentence. <strong>Postorder</strong> is the only order that touches a node <em>after</em> both children, which is exactly why every "aggregate up" answer (height, sum, the boss problem §TR.7) is post-order: you cannot combine children's answers before you have them.</p>
+  </div>
+  <p><strong>Iterative DFS</strong> — the same walks without recursion, the fallback for the skewed-tree stack-overflow case (§TR.1's hidden requirement). Inorder is the one interviewers ask for; the pattern is "dive left pushing every node, then pop, visit, go right":</p>
+  <details class="reveal">
+    <summary>Iterative inorder &amp; preorder<span class="hint">trace the stack on the example tree first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def inorder_iter(root):
+    out, stack, node = [], [], root
+    while stack or node:
+        while node:                 # dive left, remembering the path
+            stack.append(node)
+            node = node.left
+        node = stack.pop()          # deepest node whose left is done
+        out.append(node.val)        # visit it
+        node = node.right           # now handle its right subtree
+    return out
+
+def preorder_iter(root):
+    if not root: return []
+    out, stack = [], [root]
+    while stack:
+        node = stack.pop()
+        out.append(node.val)
+        if node.right: stack.append(node.right)   # push RIGHT first...
+        if node.left:  stack.append(node.left)    # ...so LEFT pops first
+    return out</code></pre>
+      <p>The preorder trick — push right before left — is forced by LIFO: to <em>pop</em> left first you must <em>push</em> it last. Getting this backwards is the classic iterative-traversal bug.</p>
+    </div>
+  </details>
+  <p><strong>Level-order (BFS)</strong> is the fourth walk and the one Type B builds on. A queue plus the <em>frozen boundary</em> trick — snapshot <code class="ic">len(queue)</code> so each inner loop drains exactly one level — gives the canonical list-of-lists:</p>
+  <details class="reveal">
+    <summary>Level-order — LC 102<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">from collections import deque
+
+def levelOrder(root):
+    if not root: return []
+    res, q = [], deque([root])
+    while q:
+        level = []
+        for _ in range(len(q)):     # freeze: exactly one level
+            node = q.popleft()
+            level.append(node.val)
+            if node.left:  q.append(node.left)
+            if node.right: q.append(node.right)
+        res.append(level)
+    return res</code></pre>
+      <p>Every node enters and leaves the queue once → <strong>O(n)</strong> time; the queue holds at most one level → <strong>O(w)</strong> space. Zig-zag (LC 103) is this with an alternating <code class="ic">level.reverse()</code>; level-average, right-side view, and largest-per-level are all this same loop with a different one-line reducer.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="tr-trav">Mark understood</button></div>
+</section>
+
+<section class="sec" id="tr-basics" data-nav="TR.1b · Tree basics" data-group="Set 06 · Trees">
+  <p class="eyebrow"><span class="dim">§TR.1b</span> · WARM-UPS · THE REPORT IS THE WHOLE JOB</p>
+  <h2>Five warm-ups — deciding what a subtree reports</h2>
+  <p>Each of these is three to five lines once you answer the one question from §TR.1: <em>what does a subtree hand its parent?</em> Do them cold before the typed problems — they build the reflex the harder types only decorate.</p>
+
+  <div class="prob"><span class="prob-tag">LC 226 · Invert Binary Tree</span><span class="prob-text">Mirror the tree left-to-right.</span></div>
+  <p><strong>Logic:</strong> mirroring means swapping the two children at <em>every</em> node. Invert both subtrees, swap the pointers, hand the node back up — the interview-lore problem, three lines.</p>
+<pre class="code"><code data-lang="python">def invertTree(root):
+    if not root:
+        return None
+    root.left, root.right = invertTree(root.right), invertTree(root.left)
+    return root</code></pre>
+
+  <div class="prob"><span class="prob-tag">LC 100 · Same Tree</span><span class="prob-text">Are two trees identical in shape and values?</span></div>
+  <p><strong>Logic:</strong> two trees match iff their roots match <em>and</em> their left subtrees match <em>and</em> their right subtrees match — the recursion mirrors that sentence exactly. Bases: two empties are equal; one empty, or a value mismatch, is not.</p>
+<pre class="code"><code data-lang="python">def isSameTree(p, q):
+    if not p and not q:
+        return True
+    if not p or not q or p.val != q.val:
+        return False
+    return isSameTree(p.left, q.left) and isSameTree(p.right, q.right)</code></pre>
+
+  <div class="prob"><span class="prob-tag">LC 101 · Symmetric Tree</span><span class="prob-text">Is the tree a mirror image of itself?</span></div>
+  <p><strong>Logic:</strong> symmetry is Same-Tree with a twist — compare the left subtree against the right, but <em>cross</em> the recursion so a node's left pairs with its mirror's right. Outer-with-outer, inner-with-inner.</p>
+<pre class="code"><code data-lang="python">def isSymmetric(root):
+    def mirror(a, b):
+        if not a and not b:
+            return True
+        if not a or not b or a.val != b.val:
+            return False
+        return mirror(a.left, b.right) and mirror(a.right, b.left)
+    return mirror(root, root)</code></pre>
+
+  <div class="prob"><span class="prob-tag">Count &amp; sum</span><span class="prob-text">How many nodes are there? What do their values add to?</span></div>
+  <p><strong>Logic:</strong> the report is just a number, and combine = this node's own contribution + both children's reports. This IS the archetype every §TR.4 aggregate reuses — recognise the shape here and the whole set feels familiar.</p>
+<pre class="code"><code data-lang="python">def countNodes(node):
+    if not node: return 0
+    return 1 + countNodes(node.left) + countNodes(node.right)
+
+def sumNodes(node):
+    if not node: return 0
+    return node.val + sumNodes(node.left) + sumNodes(node.right)</code></pre>
+
+  <div class="prob"><span class="prob-tag">LC 111 · Minimum Depth</span><span class="prob-text">Length of the shortest root-to-<em>leaf</em> path.</span></div>
+  <p><strong>Logic + the trap:</strong> depth is measured to a <em>leaf</em> — a node with no children. Copying maxDepth and swapping <code class="ic">max</code> for <code class="ic">min</code> is wrong: at a node with only one child, the missing side reports 0 and <code class="ic">min</code> wrongly calls that node depth 1. You must skip a missing side, not average it in.</p>
+<pre class="code"><code data-lang="python">def minDepth(root):
+    if not root:
+        return 0
+    if not root.left:  return 1 + minDepth(root.right)   # only-right child: don't count the null
+    if not root.right: return 1 + minDepth(root.left)    # only-left child:  same
+    return 1 + min(minDepth(root.left), minDepth(root.right))</code></pre>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ min is not max with the sign flipped</span>
+    <p>The asymmetry that bites everyone: for <em>maximum</em> depth an empty child contributing 0 is harmless — it never wins the <code class="ic">max</code>. For <em>minimum</em> depth that same 0 is poison — it wins the <code class="ic">min</code> and reports a non-leaf as depth 1. Whenever you turn a max recurrence into a min, re-audit every base case; the empty-tree answer rarely survives the flip unchanged.</p>
+  </div>
+  <div class="sec-foot"><button class="btn understood" data-sec="tr-basics">Mark understood</button></div>
 </section>
 
 <section class="sec" id="tr-a" data-nav="TR.2 · A — Structural recursion" data-group="Set 06 · Trees">
@@ -3303,12 +3461,141 @@ def rightSideView(root):
     <p>(1) A heap answers <strong>only "current extreme"</strong> — no search, no arbitrary delete, no ordered iteration; need those → pair it with a hashmap (lazy deletion, §H.7) or use a sorted container. (2) Elements must be <strong>totally comparable</strong> — Python compares tuples lexicographically and falls through ties to the payload, crashing on uncomparable objects (the famous LC 23 TypeError); tie-break with a counter. (3) Python's heapq is <strong>min-only</strong> — negate keys for max. (4) One-shot static top-k has cheaper tools: quickselect O(n) average, or buckets when the domain is bounded (§B.4's escalation ladder) — the heap earns its keep when data <em>arrives</em> (streams) or when k sources must be merged.</p>
   </div>
   <p><strong>Complexity tell:</strong> "n operations × log(heap size)" — and the heap size is a design choice: cap it at k and the bound is <strong>O(n log k)</strong>, at 26 letters and log is a constant. Constraint smell: "stream", "online", "as they arrive" ⇒ heap; static array + single query ⇒ quickselect/buckets.</p>
+  <p><strong>The two engine parts.</strong> Everything a heap does is one of two O(log n) repairs, each walking a single root-to-leaf path. <em>Sift-up</em> floats a too-small newcomer toward the root; <em>sift-down</em> sinks a too-big root toward the leaves. Knowing these cold is what lets you hand-roll a heap in a language that lacks one (JS), and it is what "implement a heap" means in an interview:</p>
+<pre class="code"><code data-lang="python">def sift_up(h, i):                 # after appending a new leaf at index i
+    while i &gt; 0 and h[(i - 1) // 2] &gt; h[i]:
+        p = (i - 1) // 2
+        h[i], h[p] = h[p], h[i]    # swap with parent, keep climbing
+        i = p
+
+def sift_down(h, i, n):            # after placing some value at index i
+    while True:
+        smallest, l, r = i, 2 * i + 1, 2 * i + 2
+        if l &lt; n and h[l] &lt; h[smallest]: smallest = l
+        if r &lt; n and h[r] &lt; h[smallest]: smallest = r   # compare BOTH children
+        if smallest == i: break
+        h[i], h[smallest] = h[smallest], h[i]
+        i = smallest</code></pre>
+  <p><strong>Push</strong> = append to the tail, then sift-up. <strong>Pop</strong> = swap the root with the last leaf, chop the tail off, then sift-down the new root. Both touch one path, so both are ≤ ⌊log₂ n⌋ swaps. The one non-obvious line: sift-down must swap with the <em>smaller</em> child (for a min-heap), never just the left one — swap with the larger and you shove a big value upward, silently breaking the invariant. That single slip is the most common hand-rolled-heap bug.</p>
+  <p><strong>Why a heap and not a sorted list or a balanced BST?</strong> All three can serve "the extreme", but the real job is <em>repeated extract-extreme plus fresh inserts</em>, and only the heap keeps both cheap on a flat, cache-friendly array:</p>
+<pre class="code"><code data-lang="none">job: repeatedly read + remove the extreme, and insert new items as they arrive
+  sorted list / array   peek O(1)    but insert O(n)  (shift everything)     inserts sink you
+  balanced BST          all O(log n) but pointers, no locality, more code     works, heavier
+  binary heap           peek O(1), push/pop O(log n), one flat array          the right tool</code></pre>
   
   <details class="reveal reveal--plain"><summary>In plain English — the same idea, slower<span class="hint">new here? start with this</span></summary><div class="reveal-body">
 <p>A heap is an emergency room, not a sorted waiting list. The ER never sorts all patients — it only ever needs to answer one question, over and over: <em>“who is most urgent RIGHT NOW?”</em> The heap keeps just that one promise, cheaply, and deliberately leaves everything else messy. The messiness IS the speed: you don’t pay for order you never use.</p>
 <p>The size-k trick, in plain words: to track the k biggest things you’ve ever seen, keep an elite club of k members where the <strong>weakest current member guards the door</strong>. A newcomer either beats the doorkeeper (kick the doorkeeper out, newcomer joins) or doesn’t (newcomer leaves forever — there are already k members stronger than it). That’s why tracking the LARGEST k uses a MIN-heap: the doorkeeper is the smallest of the elite. This inversion trips everyone once; let it trip you here, not in the interview.</p>
 <p>When NOT to use it: if all the data is already sitting in front of you and you need the answer once, cheaper tools exist (quickselect, buckets). The heap earns its keep when data keeps <em>arriving</em>.</p></div></details>
   <div class="sec-foot"><button class="btn understood" data-sec="hp-theory">Mark understood</button></div>
+</section>
+
+<section class="sec" id="hp-tool" data-nav="H.1a · The heapq toolbox" data-group="Set 07 · Heap &amp; top-K">
+  <p class="eyebrow"><span class="dim">§H.1a</span> · THE TOOLBOX · USE IT WITHOUT THINKING</p>
+  <h2>Using a heap in practice — every operation, once</h2>
+  <p>Python's <code class="ic">heapq</code> is not an object — it is a set of functions that treat a plain list as a min-heap. Here is the whole surface, with the array shown after each call so the mechanics stay visible:</p>
+<pre class="code"><code data-lang="python">import heapq
+
+h = []
+heapq.heappush(h, 5)      # h = [5]
+heapq.heappush(h, 1)      # h = [1, 5]        1 sifted above 5
+heapq.heappush(h, 3)      # h = [1, 5, 3]
+heapq.heappush(h, 8)      # h = [1, 5, 3, 8]
+h[0]                      # 1   peek the min — O(1), no removal
+heapq.heappop(h)          # 1   remove + return the min; h = [3, 5, 8]
+
+nums = [5, 1, 3, 8, 2]
+heapq.heapify(nums)       # rearrange IN PLACE into a valid heap — O(n), not O(n log n)
+
+heapq.heappushpop(h, 4)   # push 4, THEN pop the min — one sift, cheaper than two calls
+heapq.heapreplace(h, 4)   # pop the min, THEN push 4 — note the OPPOSITE order
+
+heapq.nlargest(3, nums)   # [8, 5, 3]   convenience wrappers, O(n log k) inside
+heapq.nsmallest(3, nums)  # [1, 2, 3]</code></pre>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ heappushpop vs heapreplace — the order flips</span>
+    <p><code class="ic">heappushpop</code> adds first, so a new item smaller than the current min passes straight through untouched. <code class="ic">heapreplace</code> pops first, so it always evicts the old root <em>even if your new item is smaller than everything in the heap</em>. For the size-k pattern (§H.2), guard with <code class="ic">if x &gt; heap[0]: heapreplace(...)</code>, or reach for <code class="ic">heappushpop</code> — picking the wrong one is a silent off-by-one in your top-k.</p>
+  </div>
+  <p><strong>Max-heap:</strong> Python gives you only a min-heap, so negate on the way in and re-negate on the way out. Forgetting the second negation is a classic silent wrong answer.</p>
+<pre class="code"><code data-lang="python">maxh = []
+for x in [5, 1, 8]:
+    heapq.heappush(maxh, -x)          # store negatives
+biggest = -heapq.heappop(maxh)        # 8 — RE-negate on read</code></pre>
+  <p><strong>Keyed heaps (rank by one field, carry a payload):</strong> push tuples. Python compares them field by field, so put the sort key first — and slip a unique counter in <em>second</em> so ties never fall through to comparing the payloads (the LC 23 <code class="ic">TypeError</code>, §H.7):</p>
+<pre class="code"><code data-lang="python">import itertools
+counter = itertools.count()           # 0, 1, 2, ... a monotonic tiebreaker
+heap = []
+heapq.heappush(heap, (priority, next(counter), payload))
+# (priority, unique_int, payload): the int breaks every priority tie,
+# so two equal-priority items never compare their payloads.</code></pre>
+  <details class="reveal">
+    <summary>From scratch — a MinHeap for when the language has no heapq (e.g. JS)<span class="hint">this is the two engine parts, wrapped</span></summary>
+    <div class="reveal-body">
+      <p>Nothing here but §H.1's <code class="ic">sift_up</code> / <code class="ic">sift_down</code> wrapped in a class — the exact thing to reproduce when an interviewer says "now implement the heap":</p>
+<pre class="code"><code data-lang="python">class MinHeap:
+    def __init__(self):
+        self.h = []
+    def peek(self):
+        return self.h[0]
+    def push(self, x):
+        self.h.append(x)
+        self._up(len(self.h) - 1)
+    def pop(self):
+        h = self.h
+        h[0], h[-1] = h[-1], h[0]     # swap root with last leaf
+        top = h.pop()                 # remove old root in O(1)
+        if h: self._down(0)
+        return top
+    def _up(self, i):
+        while i &gt; 0 and self.h[(i - 1) // 2] &gt; self.h[i]:
+            p = (i - 1) // 2
+            self.h[i], self.h[p] = self.h[p], self.h[i]
+            i = p
+    def _down(self, i):
+        h, n = self.h, len(self.h)
+        while True:
+            s, l, r = i, 2 * i + 1, 2 * i + 2
+            if l &lt; n and h[l] &lt; h[s]: s = l
+            if r &lt; n and h[r] &lt; h[s]: s = r
+            if s == i: return
+            h[i], h[s] = h[s], h[i]
+            i = s</code></pre>
+      <p>Translating to JS is mechanical: <code class="ic">this.h</code>, <code class="ic">Math.floor((i - 1) / 2)</code>, and the same two loops. A max-heap just flips the two comparisons.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="hp-tool">Mark understood</button></div>
+</section>
+
+<section class="sec" id="hp-warm" data-nav="H.1b · Warm-up · Last Stone" data-group="Set 07 · Heap &amp; top-K">
+  <p class="eyebrow"><span class="dim">§H.1b</span> · WARM-UP · THE SIMPLEST REAL HEAP PROBLEM</p>
+  <h2>Warm-up — repeatedly grab the extreme</h2>
+  <div class="prob"><span class="prob-tag">LC 1046 · Last Stone Weight</span><span class="prob-text">Each turn, smash the two heaviest stones together; if their weights differ, the difference goes back in. Return the last remaining weight (0 if none).</span></div>
+  <p><strong>Why this is the canonical first heap problem:</strong> it needs exactly one thing, over and over — "give me the current maximum, then let me insert a new value." That sentence <em>is</em> the definition of a heap, so recognising it is the whole exercise. Re-sorting the list every turn would be O(n² log n); a max-heap makes each turn O(log n).</p>
+  <details class="reveal reveal--check"><summary>Check yourself: stones [2,7,4,1,8,1] — the answer?</summary><div class="reveal-body"><p>1. Smash 8 &amp; 7 → 1 back (now 2,4,1,1,1). Smash 4 &amp; 2 → 2 back. Smash 2 &amp; 1 → 1 back. Smash 1 &amp; 1 → nothing. Left with 1 &amp; 0 → 1. The heap just keeps surfacing the two current biggest.</p></div></details>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">import heapq
+
+def lastStoneWeight(stones):
+    heap = [-s for s in stones]        # negate -> a max-heap
+    heapq.heapify(heap)                # O(n) build
+    while len(heap) &gt; 1:
+        a = -heapq.heappop(heap)       # heaviest
+        b = -heapq.heappop(heap)       # second heaviest
+        if a != b:
+            heapq.heappush(heap, -(a - b))   # remainder back in
+    return -heap[0] if heap else 0</code></pre>
+      <p>Two pops per turn are enough because a and b are already the two largest — no scan. Since <code class="ic">a &gt;= b</code>, the remainder <code class="ic">a - b</code> is non-negative, so negating it stores a valid max-heap key.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Each turn removes at least one stone, so ≤ n turns; each does O(1) pops/pushes at O(log n) apiece → <strong>O(n log n)</strong> time, <strong>O(n)</strong> space. The heapify seed is O(n) and vanishes into that bound. This is the same "stream of extract-max + insert" shape you will decorate in every later heap type.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="hp-warm">Mark understood</button></div>
 </section>
 
 <section class="sec" id="hp-a" data-nav="H.2 · A — Size-k heap" data-group="Set 07 · Heap &amp; top-K">
@@ -3878,6 +4165,128 @@ while queue:
   <div class="sec-foot"><button class="btn understood" data-sec="gr-theory">Mark understood</button></div>
 </section>
 
+<section class="sec" id="gr-fund" data-nav="GR.1a · Fundamentals" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.1a</span> · VOCABULARY · REPRODUCE COLD</p>
+  <h2>Graph fundamentals — the vocabulary underneath the theory</h2>
+  <p>A graph generalizes a tree (§TR.1) by dropping two guarantees: no single root, and nodes may connect back to ancestors — cycles are legal. Everything in §GR.1's theory (the visited set, the four processing orders) exists <em>because</em> those guarantees are gone. This section is the vocabulary; skip it if it's already reflexive.</p>
+  <p><strong>Vertex / node</strong> — a point. <strong>Edge</strong> — a connection between two nodes. <strong>Adjacent</strong> — two nodes joined by a direct edge. <strong>Degree</strong> — how many edges touch a node:</p>
+  <figure class="fig"><svg viewBox="0 0 420 190" role="img" aria-label="A small undirected graph with node degrees labeled">
+    <line class="dg-e" x1="210" y1="40" x2="110" y2="100"/>
+    <line class="dg-e" x1="210" y1="40" x2="310" y2="100"/>
+    <line class="dg-e" x1="110" y1="100" x2="110" y2="160"/>
+    <line class="dg-e" x1="310" y1="100" x2="310" y2="160"/>
+    <line class="dg-e" x1="110" y1="160" x2="310" y2="160"/>
+    <circle class="dg-boxa" cx="210" cy="30" r="16"/><text class="dg-t" x="210" y="35" text-anchor="middle">A</text>
+    <circle class="dg-box" cx="110" cy="100" r="16"/><text class="dg-t" x="110" y="105" text-anchor="middle">B</text>
+    <circle class="dg-box" cx="310" cy="100" r="16"/><text class="dg-t" x="310" y="105" text-anchor="middle">C</text>
+    <circle class="dg-box" cx="110" cy="170" r="16"/><text class="dg-t" x="110" y="175" text-anchor="middle">D</text>
+    <circle class="dg-box" cx="310" cy="170" r="16"/><text class="dg-t" x="310" y="175" text-anchor="middle">E</text>
+    <text class="dg-ta" x="210" y="14" text-anchor="middle">degree(A) = 2</text>
+    <text class="dg-td" x="110" y="60" text-anchor="middle">deg(B)=3</text>
+    <text class="dg-td" x="310" y="60" text-anchor="middle">deg(C)=3</text>
+  </svg><figcaption>A–B and A–C make A and B adjacent, A and C adjacent — but B and C are not. Sum of all degrees (2+3+3+2+2=12) always equals 2 × edge count (6) — every undirected edge is counted from both ends.</figcaption></figure>
+  <p><strong>Directed vs undirected</strong> — the defining fork of every graph problem, and the first question to ask:</p>
+<pre class="code"><code data-lang="none">undirected: A --- B    means A -&gt; B  AND  B -&gt; A   (e.g. friendship, roads)
+directed:   A ---&gt; B   means A -&gt; B  ONLY          (e.g. "follows", one-way flights)</code></pre>
+  <p><strong>Weighted vs unweighted</strong> — does every edge cost the same, or does it carry a number (distance, time, price)? The two forks combine into four graph shapes, and every algorithm in this set assumes one specific combination — misreading which one you have is the single most common graph-interview mistake:</p>
+  <div class="tblwrap"><table class="tbl">
+    <tr><th>Shape</th><th>Notation</th><th>The tool that fits</th></tr>
+    <tr><td class="m">undirected + unweighted</td><td class="m">A --- B</td><td>BFS for shortest path, DSU for connectivity</td></tr>
+    <tr><td class="m">undirected + weighted</td><td class="m">A --5-- B</td><td>Dijkstra / MST (§GR.6c)</td></tr>
+    <tr><td class="m">directed + unweighted</td><td class="m">A ---&gt; B</td><td>BFS, topological sort (§GR.4)</td></tr>
+    <tr><td class="m">directed + weighted</td><td class="m">A --5--&gt; B</td><td>Dijkstra / Bellman-Ford (§GR.6d)</td></tr>
+  </table></div>
+  <p><strong>Path</strong> — a sequence of nodes each joined by an edge to the next. <strong>Cycle</strong> — a path that returns to its start (full technique in §GR.6a). <strong>Connected</strong> (undirected) — every node can reach every other node by some path. A graph that isn't connected splits into <strong>connected components</strong> — maximal groups where everything inside can reach everything else, nothing outside can reach in:</p>
+  <figure class="fig"><svg viewBox="0 0 460 130" role="img" aria-label="A disconnected graph with two connected components"><line class="dg-e" x1="70" y1="40" x2="150" y2="40"/><line class="dg-e" x1="70" y1="40" x2="110" y2="95"/><line class="dg-e" x1="150" y1="40" x2="110" y2="95"/><circle class="dg-boxa" cx="70" cy="40" r="16"/><text class="dg-t" x="70" y="45" text-anchor="middle">1</text><circle class="dg-boxa" cx="150" cy="40" r="16"/><text class="dg-t" x="150" y="45" text-anchor="middle">2</text><circle class="dg-boxa" cx="110" cy="95" r="16"/><text class="dg-t" x="110" y="100" text-anchor="middle">3</text><line class="dg-e" x1="330" y1="60" x2="410" y2="60"/><circle class="dg-box" cx="330" cy="60" r="16"/><text class="dg-t" x="330" y="65" text-anchor="middle">4</text><circle class="dg-box" cx="410" cy="60" r="16"/><text class="dg-t" x="410" y="65" text-anchor="middle">5</text><text class="dg-ta" x="110" y="16" text-anchor="middle">component {1,2,3}</text><text class="dg-td" x="370" y="16" text-anchor="middle">component {4,5}</text></svg><figcaption>Two components, three total. Counting them is §GR.2's whole pattern: scan every node, and each unvisited one you hit starts a fresh flood — one component per fresh start.</figcaption></figure>
+  <div class="callout">
+    <span class="callout-label">Recognizing a secret graph problem</span>
+    <p>The transferable skill is spotting "objects + relationships between objects" in prose that never says the word graph: locations+roads (Maps), people+friendships (social networks), computers+connections (network reachability), courses+prerequisites (§GR.4), airports+flights (§GR.6d), board positions+legal moves. Whenever a problem describes entities and pairwise relationships, translate it to nodes and edges before choosing an algorithm.</p>
+  </div>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-fund">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-rep" data-nav="GR.1b · Representations" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.1b</span> · HOW A GRAPH IS STORED</p>
+  <h2>Three representations — and why the adjacency list wins by default</h2>
+  <p>The same graph can be stored three ways; the choice changes which operations are cheap. Interview default: <strong>adjacency list</strong>, unless the input arrives as raw edges for something like Kruskal (§GR.6c) or the problem needs O(1) edge-exists checks on a small, dense graph.</p>
+  <p><strong>1. Edge list</strong> — literally the input, unprocessed. Cheapest to build, useless for traversal (no way to ask "who are u's neighbors" without a scan):</p>
+<pre class="code"><code data-lang="python">edges = [[0, 1], [0, 2], [1, 3]]              # unweighted
+edges_w = [[0, 1, 5], [0, 2, 2], [1, 3, 7]]   # weighted: [u, v, w]</code></pre>
+  <p><strong>2. Adjacency matrix</strong> — an n×n grid, <code class="ic">matrix[i][j]</code> truthy iff an edge i→j exists. O(1) edge check, O(V²) space regardless of how few edges exist — wasteful once the graph is sparse (E ≪ V²), which most interview graphs are:</p>
+<pre class="code"><code data-lang="python">matrix = [[0] * n for _ in range(n)]          # NOT [[0]*n]*m — see §F.5's aliasing trap
+for u, v in edges:
+    matrix[u][v] = 1
+    matrix[v][u] = 1                          # only for UNDIRECTED graphs</code></pre>
+  <p><strong>3. Adjacency list</strong> — for every node, the list of its neighbors. O(V + E) space — pays only for edges that exist — and answers "who are u's neighbors" in O(1) plus the neighbor count, which is exactly what every traversal needs:</p>
+<pre class="code"><code data-lang="python">graph = {"A": ["B", "C"], "B": ["A", "D"], "C": ["A"], "D": ["B"]}
+
+# building one from a numbered edge list — the workhorse pattern
+graph = [[] for _ in range(n)]
+for u, v in edges:
+    graph[u].append(v)
+    graph[v].append(u)          # BOTH directions — an undirected edge IS two directed ones</code></pre>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ Directed graphs: do NOT add both directions</span>
+    <p>For a <strong>directed</strong> edge list, <code class="ic">graph[u].append(v)</code> only — never the reverse. <code class="ic">A → B</code> ("A follows B", "course A is a prerequisite of B") does not imply <code class="ic">B → A</code>; adding it silently turns the input into an undirected graph and every downstream algorithm (topo sort, directed cycle detection) becomes meaningless.</p>
+  </div>
+  <div class="tblwrap"><table class="tbl">
+    <tr><th>Representation</th><th>Space</th><th>Edge exists?</th><th>Iterate u's neighbors</th></tr>
+    <tr><td>Edge list</td><td class="m">O(E)</td><td class="m">O(E) scan</td><td class="m">O(E) scan</td></tr>
+    <tr><td>Adjacency matrix</td><td class="m">O(V²)</td><td class="m">O(1)</td><td class="m">O(V) scan a row</td></tr>
+    <tr><td>Adjacency list</td><td class="m">O(V+E)</td><td class="m">O(deg(u))</td><td class="m">O(deg(u)) — optimal</td></tr>
+  </table></div>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-rep">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-trav" data-nav="GR.1c · DFS &amp; BFS toolkit" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.1c</span> · REPRODUCE COLD · EVERY FORM, ONCE</p>
+  <h2>DFS &amp; BFS — every form you'll actually write</h2>
+  <p>§GR.1's theory already gave the BFS skeleton and its layer invariant. This section is the full toolkit around it: DFS in both forms, and the BFS variants that answer "how far" instead of just "can I reach".</p>
+  <p><strong>Recursive DFS</strong> — go as deep as possible before backtracking; the recursion stack IS the path from the root:</p>
+<pre class="code"><code data-lang="python">def dfs(node, graph, visited):
+    visited.add(node)                  # mark on FIRST touch, not on some later check
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(neighbor, graph, visited)</code></pre>
+  <div class="callout callout--warn">
+    <span class="callout-label">⚠ Why visited is not optional here (unlike trees)</span>
+    <p>A tree (§TR.1) has no cycles, so DFS there never needed a visited set. A graph does: <code class="ic">A - B - C - A</code> without tracking visits recurses A→B→C→A→B→C… forever. The visited set is the one addition that turns tree-DFS into graph-DFS — say that sentence and the whole set clicks.</p>
+  </div>
+  <p><strong>Iterative DFS</strong> — an explicit stack instead of the call stack, the fallback when recursion depth is a risk (§TR.8's habit, same reasoning here):</p>
+<pre class="code"><code data-lang="python">def dfs_iter(start, graph):
+    visited = {start}
+    stack = [start]
+    while stack:
+        node = stack.pop()
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)      # mark on PUSH — avoids duplicate stack entries
+                stack.append(neighbor)</code></pre>
+  <p><strong>BFS to a single target, with distance</strong> — carry the distance alongside each queued node; correct the instant the target is dequeued, by the layer invariant (§GR.1):</p>
+<pre class="code"><code data-lang="python">from collections import deque
+
+def bfs_distance(start, target, graph):
+    visited = {start}
+    queue = deque([(start, 0)])
+    while queue:
+        node, dist = queue.popleft()
+        if node == target:
+            return dist
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, dist + 1))
+    return -1                              # unreachable</code></pre>
+  <p><strong>Grid DFS/BFS</strong> — the direction-vector idiom that turns a 2D array into a graph with no adjacency list at all (worked in full at §GR.2):</p>
+<pre class="code"><code data-lang="python">DIRS = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+for dr, dc in DIRS:
+    nr, nc = r + dr, c + dc
+    if 0 &lt;= nr &lt; rows and 0 &lt;= nc &lt; cols and (nr, nc) not in visited:
+        ...</code></pre>
+  <p>Reflexes to leave this section with: <strong>DFS pairs with a stack</strong> (explicit or the call stack) and answers "is it connected / can I reach it"; <strong>BFS pairs with a queue</strong> and is the only one of the two that guarantees shortest-path-by-edge-count. Reach for BFS the instant a problem says "minimum steps/moves" over unit-cost edges.</p>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-trav">Mark understood</button></div>
+</section>
+
 <section class="sec" id="gr-a" data-nav="GR.2 · A — Flood fill" data-group="Set 09 · Graphs">
   <p class="eyebrow"><span class="dim">§GR.2</span> · TYPE A</p>
   <h2>Connected components — flood fill</h2>
@@ -4099,6 +4508,204 @@ while queue:
   <div class="sec-foot"><button class="btn understood" data-sec="gr-e">Mark understood</button></div>
 </section>
 
+<section class="sec" id="gr-f" data-nav="GR.6a · F — Cycle detection" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.6a</span> · TYPE F</p>
+  <h2>Cycle detection — two graphs, two different proofs</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 261-style · Graph Valid Tree</span>
+    <span class="prob-text">Undirected: does this graph contain a cycle? Directed: same question, different technique entirely.</span>
+  </div>
+  <p><strong>Why one technique can't serve both:</strong> in an undirected graph, the edge you just walked IN always looks like a "revisit" — A–B makes B see A as already-visited on the very next step, and that is <em>not</em> a cycle. Directed graphs have no such false alarm (an edge only runs one way), but they gain a different one: a node fully explored on an <em>earlier, finished</em> branch is safe to see again, while one still <em>open on the current path</em> is a live cycle. Two different false positives, two different fixes.</p>
+  <p><strong>Undirected — track the parent, not just "visited":</strong> a node is only guilty if it revisits a neighbor that is <em>visited and not the edge you just arrived from</em>.</p>
+<pre class="code"><code data-lang="python">def has_cycle_undirected(graph, n):
+    visited = set()
+    def dfs(node, parent):
+        visited.add(node)
+        for nb in graph[node]:
+            if nb == parent:
+                continue                   # the edge we just came from — not a cycle
+            if nb in visited:
+                return True                 # any OTHER visited neighbor — genuine cycle
+            if dfs(nb, node):
+                return True
+        return False
+    return any(node not in visited and dfs(node, -1) for node in range(n))</code></pre>
+  <p>Set 11 already solves this exact question with a different tool — DSU (§U.3): union every edge's endpoints, and an edge whose endpoints are <em>already</em> in the same set is the cycle-closing edge. Prefer DSU when edges arrive one at a time or connectivity is queried repeatedly; prefer the parent-tracking DFS above when you're already doing a single traversal and a cycle is just one more thing to check along the way.</p>
+  <p><strong>Directed — three states, not two:</strong> a plain visited set can't distinguish "finished, safe" from "still open, on my current path", so track a third state:</p>
+<pre class="code"><code data-lang="none">0 = unvisited        never touched
+1 = visiting          on the CURRENT recursion path — a back-edge here IS a cycle
+2 = done              fully explored, all descendants resolved, permanently safe</code></pre>
+  <figure class="fig"><svg viewBox="0 0 460 140" role="img" aria-label="A directed cycle B to C to B, detected as a back-edge to a GRAY node"><line class="dg-e" x1="90" y1="60" x2="220" y2="60"/><line class="dg-ea" x1="220" y1="72" x2="220" y2="108"/><line class="dg-ew" x1="205" y1="118" x2="105" y2="72"/><circle class="dg-box" cx="70" cy="60" r="16"/><text class="dg-t" x="70" y="65" text-anchor="middle">A</text><circle class="dg-boxa" cx="240" cy="60" r="16"/><text class="dg-t" x="240" y="65" text-anchor="middle">B</text><circle class="dg-boxa" cx="240" cy="120" r="16"/><text class="dg-t" x="240" y="125" text-anchor="middle">C</text><text class="dg-tw" x="230" y="20" text-anchor="middle">B and C are state=1 (still open) when C's edge points back to B</text></svg><figcaption>A → B → C → B: when C examines its edge to B, B is state 1 (mid-recursion, on the stack) — that back-edge to an OPEN node is the cycle certificate. A finished node reached a second time would be state 2, and is not.</figcaption></figure>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def has_cycle_directed(graph, n):
+    state = [0] * n
+    def dfs(node):
+        state[node] = 1                    # entering: open on this path
+        for nb in graph[node]:
+            if state[nb] == 1:
+                return True                 # back-edge to an OPEN node — cycle
+            if state[nb] == 0 and dfs(nb):
+                return True
+        state[node] = 2                    # leaving: fully resolved, safe forever
+        return False
+    return any(state[node] == 0 and dfs(node) for node in range(n))</code></pre>
+      <p>The postorder moment — right where <code class="ic">state[node] = 2</code> is set — is also exactly when a node is safe to prepend to a result list. Do that instead of returning a bool and you have <strong>topological sort via DFS</strong>, a second route to §GR.4's answer that also proves the no-cycle precondition as a side effect, instead of Kahn's leftover-count check.</p>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Both are one DFS pass, O(1) work per edge examined → <strong>O(V + E)</strong> time and space for both variants — cycle detection costs nothing beyond the traversal you were already doing.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-f">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-g" data-nav="GR.6b · G — Bipartite check" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.6b</span> · TYPE G</p>
+  <h2>Bipartite check — two-coloring as a graph problem</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 785 · Is Graph Bipartite?</span>
+    <span class="prob-text">Can every node be colored one of two colors so that no edge joins two same-colored nodes?</span>
+  </div>
+  <p><strong>The recognition:</strong> whenever a problem says "split into two groups such that no [conflict] pair lands in the same group" — incompatible people, opposing teams, mutually-exclusive tasks — it is 2-coloring in disguise, and 2-coloring is a graph traversal: build an edge for every conflict pair, then try to color.</p>
+  <p><strong>The algorithm:</strong> BFS/DFS from any uncolored node, coloring it arbitrarily; every neighbor must take the <em>opposite</em> color. The moment a neighbor is already colored <em>the same</em> as the current node, no valid split exists — contradiction found, stop. Loop over all nodes (§GR.2's outer-scan habit) because the graph may be disconnected — each component is judged independently.</p>
+  <figure class="fig"><svg viewBox="0 0 460 130" role="img" aria-label="A bipartite 4-cycle versus a non-bipartite triangle"><line class="dg-e" x1="70" y1="30" x2="140" y2="30"/><line class="dg-e" x1="140" y1="30" x2="140" y2="90"/><line class="dg-e" x1="140" y1="90" x2="70" y2="90"/><line class="dg-e" x1="70" y1="90" x2="70" y2="30"/><circle class="dg-boxa" cx="70" cy="30" r="13"/><circle class="dg-box" cx="140" cy="30" r="13"/><circle class="dg-boxa" cx="140" cy="90" r="13"/><circle class="dg-box" cx="70" cy="90" r="13"/><text class="dg-ta" x="105" y="115" text-anchor="middle">4-cycle: 2-colorable ✓</text><line class="dg-ew" x1="320" y1="25" x2="270" y2="90"/><line class="dg-ew" x1="320" y1="25" x2="370" y2="90"/><line class="dg-ew" x1="270" y1="90" x2="370" y2="90"/><circle class="dg-boxw" cx="320" cy="25" r="13"/><circle class="dg-boxw" cx="270" cy="90" r="13"/><circle class="dg-boxw" cx="370" cy="90" r="13"/><text class="dg-tw" x="320" y="115" text-anchor="middle">3-cycle: needs a 3rd color ✗</text></svg><figcaption>The general theorem: a graph is bipartite iff it contains no odd-length cycle. Every even cycle alternates colors cleanly; an odd cycle always forces two adjacent nodes to collide on the same color.</figcaption></figure>
+  <details class="reveal">
+    <summary>Solution<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">from collections import deque
+
+def isBipartite(graph):
+    n = len(graph)
+    color = [0] * n                        # 0 = uncolored, 1 / -1 = the two colors
+    for start in range(n):
+        if color[start]:
+            continue
+        color[start] = 1
+        queue = deque([start])
+        while queue:
+            node = queue.popleft()
+            for nb in graph[node]:
+                if color[nb] == color[node]:
+                    return False            # same color, adjacent — contradiction
+                if not color[nb]:
+                    color[nb] = -color[node]
+                    queue.append(nb)
+    return True</code></pre>
+    </div>
+  </details>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>One BFS pass over every node and edge → <strong>O(V + E)</strong> time, O(V) space for the color array — identical shape to plain BFS; the only addition is the one-line color-clash check.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-g">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-h" data-nav="GR.6c · H — Minimum spanning tree" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.6c</span> · TYPE H</p>
+  <h2>Minimum spanning tree — one proof, two algorithms</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 1584-style · Min Cost to Connect All Points</span>
+    <span class="prob-text">Connect every node in a weighted undirected graph with the minimum total edge weight.</span>
+  </div>
+  <p><strong>The shape of the answer, before any algorithm:</strong> a spanning tree touches all V nodes using exactly <strong>V − 1</strong> edges and contains no cycle (one more edge than that would close a cycle; one fewer would leave something disconnected) — the <em>minimum</em> spanning tree is the cheapest such tree by total weight.</p>
+  <div class="callout">
+    <span class="callout-label">The cut property — the one proof both algorithms lean on</span>
+    <p>Split the nodes into any two non-empty groups (a "cut"). The <strong>minimum-weight edge crossing that cut is always safe to include</strong> in some MST — swapping any costlier crossing edge for the cheapest one can only lower or match the total (an exchange argument, exactly §T.4/§S.5's pattern, applied to a partition instead of a sequence). Prim and Kruskal are two different ways of repeatedly finding a safe crossing edge via this one theorem.</p>
+  </div>
+  <p><strong>Prim's — grow one tree, cheapest frontier edge wins:</strong> start from any node; at every step, add the minimum-weight edge that connects the current tree to a node not yet in it. This is the size-k-heap frontier expansion of §H.4 wearing a different hat — a min-heap always exposes the next cheapest crossing edge.</p>
+  <details class="reveal">
+    <summary>Solution — Prim's with a heap<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">import heapq
+
+def prim_mst(n, graph):                    # graph[u] = [(weight, v), ...]
+    visited = {0}
+    heap = list(graph[0])                   # seed with node 0's edges
+    heapq.heapify(heap)
+    total = 0
+    while heap and len(visited) &lt; n:
+        w, v = heapq.heappop(heap)
+        if v in visited:
+            continue                        # stale entry — the far endpoint already joined
+        visited.add(v)
+        total += w
+        for w2, v2 in graph[v]:
+            if v2 not in visited:
+                heapq.heappush(heap, (w2, v2))
+    return total if len(visited) == n else -1   # -1: graph wasn't connected</code></pre>
+      <p>The <code class="ic">if v in visited: continue</code> line is lazy deletion (§H.7) again — heapq has no decrease-key, so stale, now-irrelevant entries are simply skipped when popped rather than removed up front.</p>
+    </div>
+  </details>
+  <p><strong>Kruskal's is already built — in Set 11.</strong> Sort every edge by weight ascending, then walk the list adding an edge unless it would close a cycle. That "would it close a cycle" test is exactly the DSU cycle check of §U.3, and §U.3 states outright: "Kruskal's MST is exactly this loop, with edges pre-sorted by weight" (LC 1584). No need to re-derive it here — the whole algorithm is DSU wearing a sorted-edge-list hat, the same way Prim above is a heap wearing one.</p>
+  <div class="tblwrap"><table class="tbl">
+    <tr><th></th><th>Prim's</th><th>Kruskal's (§U.3)</th></tr>
+    <tr><td>Grows</td><td>one tree, node by node</td><td>the forest globally, edge by edge</td></tr>
+    <tr><td>Needs</td><td>adjacency list + min-heap</td><td>a sorted edge list + DSU</td></tr>
+    <tr><td>Shines when</td><td>the graph is dense</td><td>the graph is sparse, or edges arrive as a flat list</td></tr>
+    <tr><td>Time</td><td class="m">O(E log V)</td><td class="m">O(E log E)</td></tr>
+  </table></div>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-h">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-i" data-nav="GR.6d · I — Bellman-Ford &amp; Floyd-Warshall" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.6d</span> · TYPE I</p>
+  <h2>Rounding out shortest path — negative edges, and every pair at once</h2>
+  <div class="prob">
+    <span class="prob-tag">LC 787 · Cheapest Flights Within K Stops</span>
+    <span class="prob-text">Weighted directed graph; find the cheapest route from src to dst using at most K stops.</span>
+  </div>
+  <p><strong>Why Dijkstra is disqualified here — literally, not just "slower":</strong> §GR.1's theory already named the fault line — Dijkstra's settle proof needs weights that never shrink a path, so it commits to a node's distance the first time it's popped. A stop-budget or a negative edge can both make a <em>worse-looking</em> path improve later, after the greedy commitment already happened; §GR.7's trap example (1→2 cost 1 direct, 1→3→2 costing −100 via a negative edge) is exactly this failure. <strong>Bellman-Ford</strong> fixes it by never committing early: relax every edge, over and over, until nothing improves.</p>
+  <p><strong>The relaxation, and why V − 1 rounds suffice:</strong> a simple shortest path visits each node at most once, so it has at most V − 1 edges. Round <em>k</em> of "relax every edge" guarantees every shortest path using ≤ k edges is now correct — so after V − 1 rounds, <em>every</em> simple shortest path is correct, negative edges included (as long as there's no negative cycle to make "shortest" undefined).</p>
+<pre class="code"><code data-lang="python">def bellman_ford(n, edges, src):            # edges = [(u, v, w), ...]
+    dist = [float('inf')] * n
+    dist[src] = 0
+    for _ in range(n - 1):
+        for u, v, w in edges:
+            if dist[u] != float('inf') and dist[u] + w &lt; dist[v]:
+                dist[v] = dist[u] + w
+    for u, v, w in edges:                    # round n: still improving? negative cycle.
+        if dist[u] != float('inf') and dist[u] + w &lt; dist[v]:
+            return None                       # unbounded — no well-defined shortest path
+    return dist</code></pre>
+  <p><strong>LC 787's K-stops twist is one line of this idea, not a new algorithm:</strong> a stop budget caps the number of edges a valid path may use — so instead of running V − 1 full rounds, run exactly <code class="ic">K + 1</code>, and relax off a <em>snapshot</em> of the previous round's distances (so a path can't sneak in two hops within one "round"):</p>
+  <details class="reveal">
+    <summary>Solution — bounded-stops relaxation<span class="hint">attempt it on paper first</span></summary>
+    <div class="reveal-body">
+<pre class="code"><code data-lang="python">def findCheapestPrice(n, flights, src, dst, k):
+    dist = [float('inf')] * n
+    dist[src] = 0
+    for _ in range(k + 1):                   # k stops = k+1 edges allowed
+        snapshot = dist[:]                    # freeze — this round reads OLD distances only
+        for u, v, w in flights:
+            if snapshot[u] + w &lt; dist[v]:
+                dist[v] = snapshot[u] + w
+    return dist[dst] if dist[dst] != float('inf') else -1</code></pre>
+      <p>The snapshot is the whole trick: relaxing from <code class="ic">dist</code> directly (not a frozen copy) would let one round silently chain two edges together, quietly violating the stop budget.</p>
+    </div>
+  </details>
+  <p><strong>Floyd-Warshall — every pair of nodes, at once:</strong> when the question is "shortest path between EVERY pair", running Dijkstra/Bellman-Ford from every source is wasteful compared to one DP that reasons about paths <em>through</em> each candidate intermediate node k, one node at a time:</p>
+<pre class="code"><code data-lang="python">dist = [[matrix[i][j] for j in range(n)] for i in range(n)]   # direct edges, else inf
+for k in range(n):                          # allowed intermediate: 0..k
+    for i in range(n):
+        for j in range(n):
+            if dist[i][k] + dist[k][j] &lt; dist[i][j]:
+                dist[i][j] = dist[i][k] + dist[k][j]           # is routing through k cheaper?</code></pre>
+  <p>The <code class="ic">k</code> loop MUST be outermost — it is the DP's own state ("best path using only intermediates 0..k"), not just a loop order preference.</p>
+  <details class="reveal">
+    <summary>Complexity derivation<span class="hint">re-derive it first</span></summary>
+    <div class="reveal-body">
+      <p>Bellman-Ford: (n−1) rounds × E edges → <strong>O(VE)</strong> time, O(V) space — strictly worse than Dijkstra's O(E log V) when Dijkstra is legal, which is exactly why you reach for Bellman-Ford only when it isn't. Floyd-Warshall: three nested V loops → <strong>O(V³)</strong> time, O(V²) space — fair game only when V is small (§GR.1's complexity tell: V ≲ 400), because V³ scales brutally past that.</p>
+    </div>
+  </details>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-i">Mark understood</button></div>
+</section>
+
 <section class="sec" id="gr-traps" data-nav="GR.7 · Traps &amp; drill" data-group="Set 09 · Graphs">
   <p class="eyebrow"><span class="dim">§GR.7</span> · BEFORE YOU SUBMIT + INTERROGATION</p>
   <h2>Traps, signals &amp; interrogation</h2>
@@ -4148,6 +4755,83 @@ while queue:
   <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> Sorted order is decided at the first difference.</p><p><strong>Sketch:</strong> The dictionary ranked the two words BY their first differing pair — later characters were never consulted, so only a→b is certified. Trace: wrt/wrf ⇒ t<f; wrf/er ⇒ w<e; er/ett ⇒ r<t; ett/rftt ⇒ e<r → 'wertf'. ['abc','ab']: zip exhausts with no difference; len(w1) > len(w2) → return '' — the for-else line.</p></div></details>
   </div>
   <div class="sec-foot"><button class="btn understood" data-sec="gr-traps">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-adv" data-nav="GR.8 · Advanced connectivity" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.8</span> · KNOW THEY EXIST · RECOGNIZE THE SIGNAL</p>
+  <h2>Advanced connectivity — SCC, bridges, articulation points, and beyond</h2>
+  <p>Rarer in interviews than everything above, but worth owning at recognition depth: know the name, the one-sentence idea, and the signal that should make you reach for it. Full derivations belong to a dedicated pass if one of these actually comes up.</p>
+  <p><strong>Strongly connected components (directed graphs):</strong> a set of nodes where every node can reach every other node <em>and</em> be reached back — mutual reachability, the directed-graph analogue of §GR.1a's undirected connected components. <strong>Kosaraju's</strong> idea: DFS once to record finish order, reverse every edge, DFS again in reverse-finish order — each DFS tree in the second pass is exactly one SCC. <strong>Tarjan's</strong> does it in one pass using discovery time + a "low-link" value (the earliest-discovered node reachable from the current subtree). Signal: "directed graph, mutual reachability, group nodes that cycle back to each other."</p>
+  <p><strong>Bridges &amp; articulation points (undirected graphs):</strong> a <strong>bridge</strong> is an edge whose removal disconnects the graph; an <strong>articulation point</strong> is a node whose removal does. Both are found with one DFS carrying a discovery-time counter and a low-link value per node — an edge (u, v) is a bridge exactly when v's subtree has no back-edge reaching above u. Signal: "critical connection", "single point of failure", "which edges/servers, if removed, break the network" (this is literally LC 1192, Critical Connections in a Network).</p>
+  <p><strong>State-space graphs — when the node isn't the whole state:</strong> some problems need more than "which node" to describe progress — <code class="ic">(city, stops_used)</code> for §GR.6d's K-stops budget, <code class="ic">(cell, fuel_remaining)</code>, <code class="ic">(position, keys_collected)</code>. The fix is mechanical: redefine the node as a <strong>tuple</strong> capturing everything that affects future moves, and every algorithm in this set (BFS especially) runs unchanged on that expanded graph. The one new cost is tuples must be hashable for a visited set (§GR.1's hidden requirement) — and the state space's size is now the product of each dimension, so count it before assuming "small graph."</p>
+  <p><strong>Bitmask + BFS — "visit every node" problems:</strong> when the state includes "which nodes have I already visited", represent that subset as an integer bitmask (bit i set ⟺ node i visited) — state becomes <code class="ic">(node, mask)</code>. Signal: "shortest path that visits ALL nodes" (LC 847). n ≤ ~15–20 is the constraint tell, because the mask alone is 2ⁿ states.</p>
+  <p><strong>0-1 BFS — when every edge costs exactly 0 or 1:</strong> full Dijkstra is overkill; a plain deque replaces the heap. Push a 0-weight neighbor to the <strong>front</strong> (it's still at the current best distance) and a 1-weight neighbor to the <strong>back</strong> (it's one layer out) — the deque stays sorted by distance without ever comparing anything, giving Dijkstra's answer in BFS's O(V + E):</p>
+<pre class="code"><code data-lang="python">from collections import deque
+
+def zero_one_bfs(n, graph, src):             # graph[u] = [(weight_0_or_1, v), ...]
+    dist = [float('inf')] * n
+    dist[src] = 0
+    dq = deque([src])
+    while dq:
+        u = dq.popleft()
+        for w, v in graph[u]:
+            if dist[u] + w &lt; dist[v]:
+                dist[v] = dist[u] + w
+                if w == 0:
+                    dq.appendleft(v)          # same layer — front
+                else:
+                    dq.append(v)               # next layer — back
+    return dist</code></pre>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-adv">Mark understood</button></div>
+</section>
+
+<section class="sec" id="gr-map" data-nav="GR.9 · Decision tree &amp; cheat sheet" data-group="Set 09 · Graphs">
+  <p class="eyebrow"><span class="dim">§GR.9</span> · THE WHOLE SET, ONE PAGE</p>
+  <h2>Graph decision tree &amp; cheat sheet</h2>
+  <p>The same routing discipline as §★'s master decision tree (§guide-route), scoped to graphs. Ask these in order once you've already routed to "this is a graph problem":</p>
+  <div class="dtree">
+    <div class="dtree-q"><b>1.</b> Directed or undirected? Weighted or not? — answer this <em>before</em> anything else; every algorithm below assumes one specific combination (§GR.1a).</div>
+    <div class="dtree-q"><b>2.</b> "Can A reach B?" / grid regions / provinces? <span class="goto">→ DFS or BFS (§GR.2)</span></div>
+    <div class="dtree-q"><b>3.</b> Minimum steps, unit-cost edges, multiple simultaneous sources? <span class="goto">→ BFS, multi-source if &gt;1 start (§GR.3)</span></div>
+    <div class="dtree-q"><b>4.</b> Prerequisites / build order / "can it finish"? <span class="goto">→ Topological sort — Kahn's (§GR.4) or DFS 3-color (§GR.6a)</span></div>
+    <div class="dtree-q"><b>5.</b> Shortest path, weighted, all weights ≥ 0? <span class="goto">→ Dijkstra (§GR.5)</span> — edges are only 0 or 1 <span class="goto">→ 0-1 BFS (§GR.8)</span></div>
+    <div class="dtree-q"><b>6.</b> Shortest path with negative edges, or a bounded number of stops? <span class="goto">→ Bellman-Ford (§GR.6d)</span> — need EVERY pair, and V is small? <span class="goto">→ Floyd-Warshall (§GR.6d)</span></div>
+    <div class="dtree-q"><b>7.</b> Connect all nodes at minimum total cost? <span class="goto">→ MST — Prim (§GR.6c) or Kruskal (§U.3)</span></div>
+    <div class="dtree-q"><b>8.</b> Dynamic connectivity — edges arriving over time, or repeated "same component?" queries? <span class="goto">→ Union-Find (§U.2–§U.3)</span>, not repeated BFS/DFS</div>
+    <div class="dtree-q"><b>9.</b> Split into two conflict-free groups? <span class="goto">→ Bipartite 2-coloring (§GR.6b)</span></div>
+    <div class="dtree-q"><b>10.</b> Cycle, and you're not already using DSU? <span class="goto">→ parent-tracking DFS (undirected) or 3-color DFS (directed) — §GR.6a</span></div>
+    <div class="dtree-q"><b>11.</b> "Single point of failure", critical edge/server? <span class="goto">→ Bridges / articulation points (§GR.8)</span> — mutual reachability groups in a directed graph? <span class="goto">→ SCC (§GR.8)</span></div>
+    <div class="dtree-q"><b>12.</b> The state needs more than "which node" (stops left, keys held, cells visited)? <span class="goto">→ state-space graph, node = tuple (§GR.8)</span> — visiting ALL nodes with n ≤ ~20? <span class="goto">→ bitmask + BFS (§GR.8)</span></div>
+  </div>
+  <div class="tblwrap"><table class="tbl">
+    <tr><th>Situation</th><th>Algorithm</th><th>Section</th></tr>
+    <tr><td>Reachability / connected components</td><td>DFS / BFS</td><td class="m">§GR.2</td></tr>
+    <tr><td>Unweighted shortest path</td><td>BFS</td><td class="m">§GR.1c</td></tr>
+    <tr><td>Multiple simultaneous sources</td><td>Multi-source BFS</td><td class="m">§GR.3</td></tr>
+    <tr><td>Dependency / prerequisite order</td><td>Topological sort</td><td class="m">§GR.4 / §GR.6a</td></tr>
+    <tr><td>Weighted shortest path, no negatives</td><td>Dijkstra</td><td class="m">§GR.5</td></tr>
+    <tr><td>Weighted, edges only 0 / 1</td><td>0-1 BFS</td><td class="m">§GR.8</td></tr>
+    <tr><td>Negative edges, or bounded stops</td><td>Bellman-Ford</td><td class="m">§GR.6d</td></tr>
+    <tr><td>Every pair, V small</td><td>Floyd-Warshall</td><td class="m">§GR.6d</td></tr>
+    <tr><td>Minimum cost to connect all nodes</td><td>Prim / Kruskal (MST)</td><td class="m">§GR.6c / §U.3</td></tr>
+    <tr><td>Dynamic connectivity queries</td><td>Union-Find (DSU)</td><td class="m">§U.2–§U.3</td></tr>
+    <tr><td>Two conflict-free groups</td><td>Bipartite 2-coloring</td><td class="m">§GR.6b</td></tr>
+    <tr><td>Cycle in undirected / directed graph</td><td>Parent-DFS / 3-color DFS</td><td class="m">§GR.6a</td></tr>
+    <tr><td>Critical edge / server / node</td><td>Bridges / articulation points</td><td class="m">§GR.8</td></tr>
+    <tr><td>Mutual-reachability groups (directed)</td><td>SCC (Kosaraju / Tarjan)</td><td class="m">§GR.8</td></tr>
+    <tr><td>State beyond "which node"</td><td>State-space graph</td><td class="m">§GR.8</td></tr>
+    <tr><td>Visit ALL nodes, n small</td><td>Bitmask + BFS</td><td class="m">§GR.8</td></tr>
+  </table></div>
+  <h3>Common mistakes, condensed</h3>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span>Used DFS for a shortest-unweighted-path question — DFS finds A path, not the SHORTEST; that's BFS's guarantee alone (§GR.1)</span></label></li>
+    <li><label><input type="checkbox"><span>Forgot the outer "for every node: if not visited" scan — a single dfs(0) call misses every other component (§GR.2)</span></label></li>
+    <li><label><input type="checkbox"><span>Treated a directed edge as bidirectional, or vice versa — re-read which one the problem actually gives you (§GR.1b)</span></label></li>
+    <li><label><input type="checkbox"><span>Ran Dijkstra with a negative edge present — the settle proof breaks silently; switch to Bellman-Ford (§GR.6d)</span></label></li>
+    <li><label><input type="checkbox"><span>Used <code class="ic">list.pop(0)</code> as a BFS queue — quiet O(n) per call; <code class="ic">collections.deque</code> only (§GR.7)</span></label></li>
+    <li><label><input type="checkbox"><span>Didn't recognize a grid as a graph — cells are nodes, the four direction vectors are the edge generator (§GR.1c)</span></label></li>
+  </ul>
+  <div class="sec-foot"><button class="btn understood" data-sec="gr-map">Mark understood</button></div>
 </section>
 
 <!-- ################ SET 10 — BACKTRACKING ################ -->
