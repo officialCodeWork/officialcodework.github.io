@@ -530,7 +530,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <span class="brand-name">LLD<span class="tick">_</span>LAB</span>
     <span class="brand-sub">machine coding · deliberate practice</span>
   </div>
-  <span class="setchip">SETS L0–L2 LIVE · NEXT: L3 · The everyday six</span>
+  <span class="setchip">SETS L0–L3 LIVE · NEXT: L4 · The situational eight</span>
   <div class="progress">
     <span class="progress-label"><span>understood</span><span id="progressCount">0 / 0</span></span>
     <div class="progress-bar"><i id="progressFill"></i></div>
@@ -577,7 +577,7 @@ textarea.journal::placeholder { color: var(--muted); opacity: 0.7; }
     <tr><td class="m">L0</td><td><strong>Objects from zero</strong></td><td>classes, objects, self, identity vs equality, encapsulation as rule-guarding</td><td>BankAccount · Money · LibraryCard</td><td class="set"><span class="done">L0 ✓</span></td></tr>
     <tr><td class="m">L1</td><td><strong>The four pillars</strong></td><td>abstraction/interfaces, inheritance, polymorphism, composition-over-inheritance, UML-lite</td><td>PaymentMethod · Notifier · the engine swap</td><td class="set"><span class="done">L1 ✓</span></td></tr>
     <tr><td class="m">L2</td><td><strong>Good design vocabulary + SOLID</strong></td><td>coupling/cohesion, DRY/KISS/YAGNI, each SOLID principle as violation → refactor</td><td>god-class autopsies</td><td class="set"><span class="done">L2 ✓</span></td></tr>
-    <tr><td class="m">L3</td><td><strong>The everyday six</strong></td><td>Strategy · Factory · Builder · Singleton (and sins) · Observer · Decorator</td><td>pricing engines, notifiers, config builders</td><td class="set">—</td></tr>
+    <tr><td class="m">L3</td><td><strong>The everyday six</strong></td><td>Strategy · Factory · Builder · Singleton (and sins) · Observer · Decorator</td><td>pricing engines, notifiers, config builders</td><td class="set"><span class="done">L3 ✓</span></td></tr>
     <tr><td class="m">L4</td><td><strong>The situational eight</strong></td><td>State · Command · Adapter · Facade · Proxy · Chain · Template · Composite</td><td>vending states, undo stacks, middleware</td><td class="set">—</td></tr>
     <tr><td class="m">L5</td><td><strong>The method + first classics</strong></td><td>scope freeze → nouns/verbs → patterns justified → skeleton → extension test</td><td>Tic-Tac-Toe · Parking Lot · Vending Machine</td><td class="set">—</td></tr>
     <tr><td class="m">L6</td><td><strong>Core classics</strong></td><td>one dominant pattern each — recognition training</td><td>Elevator · Snake &amp; Ladder · Library / Hotel booking</td><td class="set">—</td></tr>
@@ -1345,6 +1345,341 @@ service = NotificationService(EmailSender())    # wired up at the edge of the pr
   <div class="sec-foot"><button class="btn understood" data-sec="l2-traps">Mark understood</button></div>
 </section>
 
+<section class="sec" id="l3-a" data-nav="L3.1 · Strategy" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.1</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Strategy — the pattern you already built, now with its name</h2>
+  <p><strong>Concept first.</strong> Strategy defines a family of interchangeable algorithms, puts each behind the same interface, and lets the object that USES the algorithm (the "context") stay completely ignorant of which one it's holding. You built this twice already without the label: §L1.4's engine slot, and §L2.4's DiscountCalculator refactor. This section gives the formal shape a name and a second worked example, so you recognize it instantly under interview pressure.</p>
+  <p><strong>The signal, from the router you already have (§★ Signal router, line 1):</strong> "we might add more X later" — payment methods, pricing rules, ranking algorithms, fare formulas. Whenever the REQUEST is "compute/decide/choose one of several ways, and the set of ways will grow," Strategy is the reflex.</p>
+  <p><strong>Real life.</strong> A ride-hailing app quotes a fare three different ways depending on what you tapped: a flat base fare, a surge-multiplied fare during rush hour, and a discounted pool fare when you're willing to share. The app screen (the context) doesn't contain three copies of the fare math — it holds one FareStrategy and asks it to price the trip. Add "night fare" next quarter, and the screen's code is untouched.</p>
+<pre class="code"><code data-lang="python">from abc import ABC, abstractmethod
+
+class FareStrategy(ABC):
+    @abstractmethod
+    def price(self, distance_km): ...
+
+class FlatFare(FareStrategy):
+    def price(self, distance_km): return 40 + distance_km * 12
+
+class SurgeFare(FareStrategy):
+    def __init__(self, multiplier): self.multiplier = multiplier
+    def price(self, distance_km): return (40 + distance_km * 12) * self.multiplier
+
+class PoolFare(FareStrategy):
+    def price(self, distance_km): return (40 + distance_km * 12) * 0.7
+
+class RideBooking:                          # the context
+    def __init__(self, strategy: FareStrategy):
+        self.strategy = strategy
+    def quote(self, distance_km):
+        return self.strategy.price(distance_km)   # never asks WHICH strategy
+
+booking = RideBooking(FlatFare())
+booking.quote(10)                           # 160
+booking.strategy = SurgeFare(1.8)           # swapped at runtime — no new RideBooking class
+booking.quote(10)                           # 288.0</code></pre>
+<figure class="fig"><svg viewBox="0 0 640 210" role="img" aria-label="RideBooking context holding a swappable FareStrategy"><rect class="dg-boxa" x="230" y="20" width="180" height="60" rx="4"/><text class="dg-ta" x="320" y="45" text-anchor="middle">RideBooking</text><text class="dg-td" x="320" y="65" text-anchor="middle">holds: strategy</text><line class="dg-ea" x1="320" y1="80" x2="320" y2="110"/><rect class="dg-box" x="240" y="110" width="160" height="34" rx="4"/><text class="dg-t" x="320" y="132" text-anchor="middle">FareStrategy (interface)</text><rect class="dg-box" x="40" y="170" width="130" height="34" rx="4"/><text class="dg-t" x="105" y="192" text-anchor="middle">FlatFare</text><rect class="dg-box" x="255" y="170" width="130" height="34" rx="4"/><text class="dg-t" x="320" y="192" text-anchor="middle">SurgeFare</text><rect class="dg-box" x="470" y="170" width="130" height="34" rx="4"/><text class="dg-t" x="535" y="192" text-anchor="middle">PoolFare</text><line class="dg-e" x1="105" y1="168" x2="280" y2="144"/><line class="dg-e" x1="320" y1="168" x2="320" y2="144"/><line class="dg-e" x1="535" y1="168" x2="360" y2="144"/></svg><figcaption>The context (RideBooking) never names a concrete strategy — it only calls the interface. Adding NightFare is a new box at the bottom row; nothing above it changes.</figcaption></figure>
+  <p><strong>The trap: reaching for Strategy when a plain if/elif would do.</strong> Two fare types that will never grow past two, chosen once at app startup, is honestly simpler as a single function with a branch — that's §L2.2's YAGNI again. Strategy earns its keep when the number of variants is real and growing, OR when the choice must change at runtime without redeploying the caller.</p>
+<details class="reveal reveal--check"><summary>Check yourself: Strategy and the composition-over-inheritance slot from §L1.4 — same pattern, or different?</summary><div class="reveal-body"><p>The same structural move (a slot holding a swappable promise-keeper) — Strategy is simply that move's formal name, applied specifically to interchangeable ALGORITHMS rather than general behavior. Every composition-over-inheritance fix in §L1.4 that swapped BEHAVIOR was, in hindsight, Strategy.</p></div></details>
+  <p>A pattern name you'll meet in §L4 makes the opposite move: <strong>State</strong> also swaps behavior behind an interface, but the OBJECT switches its own strategy in response to its own transitions, instead of the client choosing once. File that contrast away — it's a favorite "compare these two" interview question.</p>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-a">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-b" data-nav="L3.2 · Factory" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.2</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Factory — centralizing the "which class?" decision</h2>
+  <p><strong>Concept first.</strong> A Factory is a single place that decides WHICH concrete class to instantiate and hands back an object through its interface — so every other piece of code depends only on the interface, never on the list of concrete classes or the rule for picking among them. Two flavors matter for interviews: a <strong>simple factory</strong> (one function or static method with a branch, not officially a GoF pattern but everywhere in real code) and <strong>Factory Method</strong> (a virtual method that SUBCLASSES override to decide what they create — creation itself becomes polymorphic).</p>
+  <p><strong>The signal (router, line 2):</strong> "creating objects is conditional or complicated."</p>
+  <p><strong>Real life.</strong> A car workshop doesn't hand a customer a pile of parts and a wrench — you say "compact" or "electric," and the workshop's assembly line (the factory) knows exactly which sequence of parts to bolt together and hands you a finished, ready-to-drive car. You never see, or need to know, the assembly steps.</p>
+  <p><strong>Violation — the decision leaks into every caller:</strong></p>
+<pre class="code"><code data-lang="python"># scattered across a dozen call sites in a parking-lot codebase:
+if spot_type == "compact":
+    spot = CompactSpot(spot_id)
+elif spot_type == "large":
+    spot = LargeSpot(spot_id)
+elif spot_type == "handicap":
+    spot = HandicapSpot(spot_id)
+# every caller repeats this ladder, and every caller must be found and
+# edited the day a fourth spot type (motorcycle) arrives</code></pre>
+  <p><strong>Refactor — a simple factory, one place to change:</strong></p>
+<pre class="code"><code data-lang="python">class ParkingSpotFactory:
+    _REGISTRY = {"compact": CompactSpot, "large": LargeSpot, "handicap": HandicapSpot}
+
+    @staticmethod
+    def create(spot_type, spot_id):
+        cls = ParkingSpotFactory._REGISTRY.get(spot_type)
+        if cls is None:
+            raise ValueError(f"unknown spot type: {spot_type}")
+        return cls(spot_id)
+
+# every caller, everywhere:
+spot = ParkingSpotFactory.create("compact", spot_id)
+# tomorrow: ParkingSpotFactory._REGISTRY["motorcycle"] = MotorcycleSpot — one line, one file</code></pre>
+  <p>(This exact factory is what you'll wire into Set L5's Parking Lot design — filed away for later, not a coincidence.)</p>
+  <p><strong>Factory Method — when SUBCLASSES should decide, not a lookup table.</strong> A logistics app has StandardShipment and ExpressShipment processors that share a workflow (validate → pack → label → dispatch) but must each create a different kind of Label object mid-workflow. Rather than a dictionary, the decision becomes a method every subclass overrides:</p>
+<pre class="code"><code data-lang="python">class ShipmentProcessor(ABC):
+    def process(self, order):                 # the shared skeleton — never overridden
+        label = self.create_label(order)       # the ONE varying step
+        return f"dispatched with {label}"
+    @abstractmethod
+    def create_label(self, order): ...         # the "factory method"
+
+class StandardShipment(ShipmentProcessor):
+    def create_label(self, order): return f"Standard label #{order.id}"
+
+class ExpressShipment(ShipmentProcessor):
+    def create_label(self, order): return f"Express label #{order.id}, next-day"</code></pre>
+  <p>Notice this is Strategy's cousin, applied specifically to object creation: the varying step is isolated behind one method, and the surrounding skeleton (process) is written once and never touched again.</p>
+<details class="reveal reveal--check"><summary>Check yourself: when would you reach for Factory Method instead of a simple registry-based factory?</summary><div class="reveal-body"><p>When creation is entangled with a larger shared workflow that differs per type in more than just "which class" — Factory Method lets each subclass customize creation AND inherit the shared surrounding steps. A simple factory is enough when creation is the ENTIRE job (build the object, hand it back, nothing else varies).</p></div></details>
+<details class="reveal reveal--plain"><summary>Going deeper — Abstract Factory, briefly<span class="hint">optional depth</span></summary><div class="reveal-body"><p>Abstract Factory is one level up: a factory that creates a whole FAMILY of related objects that must stay consistent with each other — e.g. a UI toolkit's <code class="ic">WindowsFactory</code> produces a matching WindowsButton + WindowsCheckbox + WindowsScrollbar, while <code class="ic">MacFactory</code> produces the Mac-styled trio, and the app never mixes a Windows button with a Mac scrollbar by accident. Rare in interview machine-coding rounds (more of an HLD/framework-design concern); know the name and the one-sentence idea, don't over-invest.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-b">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-c" data-nav="L3.3 · Builder" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.3</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Builder — step-by-step construction for objects with many optional parts</h2>
+  <p><strong>Concept first.</strong> Builder separates the construction of a complex object from its final shape: instead of one constructor swallowing every possible parameter, you set the pieces you care about, one call at a time, then ask the builder to hand over the finished, validated object. It exists to kill the "telescoping constructor" — a constructor with so many optional parameters that call sites become an unreadable wall of positional arguments and easy-to-swap booleans.</p>
+  <p><strong>The signal (router, line 2, second half):</strong> "creating objects is... complicated" — specifically, complicated by an unmanageable NUMBER of optional pieces rather than by which-class-to-pick.</p>
+  <p><strong>Real life.</strong> Ordering a sandwich at a Subway counter. Nobody shouts all fifteen choices at once — you're walked through it step by step: bread, then veggies, then sauce, then toasted-or-not — and only at the end do you receive one finished sandwich. Each step is optional or has a sensible default; the sandwich isn't usable, and isn't even asked for, until the last step.</p>
+  <p><strong>Violation — the telescoping constructor:</strong></p>
+<pre class="code"><code data-lang="python">class HTTPRequest:
+    def __init__(self, url, method="GET", headers=None, body=None,
+                 timeout=30, retries=0, verify_ssl=True, follow_redirects=True):
+        ...
+
+# a call site six months later — what is 3? what is False? nobody can tell without the signature open
+req = HTTPRequest("https://api.example.com", "POST", None, payload, 10, 3, True, False)</code></pre>
+  <p><strong>Refactor — a fluent builder:</strong></p>
+<pre class="code"><code data-lang="python">class HTTPRequestBuilder:
+    def __init__(self, url):
+        self._url = url
+        self._method = "GET"
+        self._headers = {}
+        self._timeout = 30
+        self._retries = 0
+
+    def method(self, m):
+        self._method = m
+        return self                      # returning self is what makes chaining possible
+
+    def header(self, key, value):
+        self._headers[key] = value
+        return self
+
+    def timeout(self, seconds):
+        self._timeout = seconds
+        return self
+
+    def retries(self, n):
+        self._retries = n
+        return self
+
+    def build(self):
+        return HTTPRequest(self._url, self._method, self._headers, self._timeout, self._retries)
+
+req = (HTTPRequestBuilder("https://api.example.com")
+       .method("POST")
+       .header("Authorization", "Bearer xyz")
+       .timeout(10)
+       .retries(3)
+       .build())                          # every line self-documents which piece it sets</code></pre>
+<figure class="fig"><svg viewBox="0 0 640 160" role="img" aria-label="A builder chain accumulating pieces, then producing a finished HTTPRequest"><text class="dg-td" x="320" y="20" text-anchor="middle">each step returns self — the chain is the pipeline</text><rect class="dg-box" x="10" y="45" width="95" height="46" rx="4"/><text class="dg-t" x="57" y="73" text-anchor="middle">.method()</text><rect class="dg-box" x="135" y="45" width="95" height="46" rx="4"/><text class="dg-t" x="182" y="73" text-anchor="middle">.header()</text><rect class="dg-box" x="260" y="45" width="95" height="46" rx="4"/><text class="dg-t" x="307" y="73" text-anchor="middle">.timeout()</text><rect class="dg-box" x="385" y="45" width="95" height="46" rx="4"/><text class="dg-t" x="432" y="73" text-anchor="middle">.retries()</text><line class="dg-ea" x1="105" y1="68" x2="135" y2="68"/><line class="dg-ea" x1="230" y1="68" x2="260" y2="68"/><line class="dg-ea" x1="355" y1="68" x2="385" y2="68"/><line class="dg-ea" x1="480" y1="68" x2="510" y2="68"/><rect class="dg-boxa" x="510" y="45" width="120" height="46" rx="4"/><text class="dg-ta" x="570" y="73" text-anchor="middle">.build()</text><text class="dg-td" x="320" y="130" text-anchor="middle">→ one finished, immutable HTTPRequest</text></svg><figcaption>Each chained call sets one named piece and hands the same builder back. Only .build() produces the finished, immutable object.</figcaption></figure>
+  <p>In Java or C++, Builder is often the ONLY clean way to fake named/optional parameters, which is why it appears constantly there. Python already has keyword arguments and defaults — a plain <code class="ic">def __init__(self, url, *, method="GET", timeout=30, ...)</code> quietly solves the readability half of this problem. Reach for a full Builder class in Python specifically when construction needs MULTIPLE STEPS with validation or computation between them (not just many optional values) — e.g. accumulating headers one at a time, or building a query piece by piece before a final <code class="ic">.build()</code> validates the whole thing together.</p>
+<details class="reveal reveal--check"><summary>Check yourself: why does every builder method return self, and what would break if timeout() returned None instead?</summary><div class="reveal-body"><p>Returning self is what lets the next call chain directly off the previous one's result — that's the entire mechanism behind the fluent one-line syntax. Return None and the chain breaks at that call: <code class="ic">.timeout(10).retries(3)</code> would try to call <code class="ic">.retries()</code> on None and crash with an AttributeError.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-c">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-d" data-nav="L3.4 · Singleton (+ sins)" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.4</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Singleton — exactly one instance, and the reasons to think twice</h2>
+  <p><strong>Concept first.</strong> Singleton guarantees a class has exactly one instance for the whole program, and gives every piece of code a global way to reach it. It's the pattern interviewers most love to interrogate, because using it correctly requires knowing exactly when NOT to.</p>
+  <p><strong>The signal (router, line 8):</strong> "exactly one of these, shared everywhere" — a single shared config, a single connection pool, a single in-memory cache.</p>
+  <p><strong>Real life.</strong> A building's reception desk. There's exactly one, everyone entering checks in through it, and it's the one place with an authoritative visitor log — you don't want five independent front desks each keeping their own half-true guest list.</p>
+  <p><strong>The naive version, and its race condition:</strong></p>
+<pre class="code"><code data-lang="python">class Config:
+    _instance = None
+    def __new__(cls):
+        if cls._instance is None:          # ← CHECK
+            cls._instance = super().__new__(cls)   # ← THEN ACT
+        return cls._instance</code></pre>
+  <p>In a single thread this is fine. With two threads calling <code class="ic">Config()</code> at nearly the same moment, both can pass the "is None?" check before EITHER has finished creating an instance — Python's GIL protects each individual bytecode operation, but the check-then-act SEQUENCE spans several operations and is not atomic. Result: two different Config objects both believe they're "the" singleton, silently.</p>
+<figure class="fig"><svg viewBox="0 0 640 190" role="img" aria-label="Two threads racing past the naive singleton's check-then-act gap"><text class="dg-t" x="150" y="20" text-anchor="middle">thread A</text><rect class="dg-box" x="40" y="30" width="220" height="30" rx="3"/><text class="dg-td" x="150" y="50" text-anchor="middle">if _instance is None:  → True</text><rect class="dg-boxw" x="40" y="70" width="220" height="30" rx="3"/><text class="dg-tw" x="150" y="90" text-anchor="middle">creating instance… (not done yet)</text><text class="dg-t" x="470" y="20" text-anchor="middle">thread B</text><rect class="dg-box" x="360" y="50" width="220" height="30" rx="3"/><text class="dg-td" x="470" y="70" text-anchor="middle">if _instance is None:  → ALSO True</text><rect class="dg-boxw" x="360" y="90" width="220" height="30" rx="3"/><text class="dg-tw" x="470" y="110" text-anchor="middle">creates a SECOND instance</text><text class="dg-tw" x="320" y="150" text-anchor="middle">both threads now hold different "singleton" objects</text></svg><figcaption>Neither thread has finished the "act" half before the other passes the "check" half — the gap between check and act is where the race lives.</figcaption></figure>
+  <p><strong>The fix — double-checked locking:</strong></p>
+<pre class="code"><code data-lang="python">import threading
+
+class Config:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:              # cheap check, no lock — fast path once built
+            with cls._lock:                     # only threads that MIGHT need to build it wait here
+                if cls._instance is None:        # re-check: another thread may have built it while we waited
+                    cls._instance = super().__new__(cls)
+        return cls._instance</code></pre>
+  <p>The check appears twice on purpose: the outer check avoids paying the lock's cost on every call once the singleton already exists (the common case); the inner check closes the exact race window from the naive version, because a second thread might have been waiting on the lock while the first thread finished building.</p>
+<details class="reveal reveal--plain"><summary>Going deeper — the truly Pythonic singleton needs none of this<span class="hint">optional depth</span></summary><div class="reveal-body"><p>Python's import system already caches every module the first time it's imported and hands back the SAME module object to every subsequent import, and that caching is itself thread-safe. A module-level object is therefore a free, thread-safe singleton with zero ceremony:</p>
+<pre class="code"><code data-lang="python"># config.py
+class _Config:
+    def __init__(self):
+        self.settings = {}
+
+config = _Config()          # built once, at first import
+
+# anywhere else:
+from config import config   # always the same object — no lock, no __new__ tricks</code></pre>
+<p>Interviewers in Python-first rounds often want to see you know the class-based double-checked-locking form (it's language-agnostic and proves you understand the race), but flag the module-level alternative as the idiomatic real-world answer — naming both is a strong senior signal. <em>(In Java, the same idiom appears as the "initialization-on-demand holder" — a static nested class, loaded lazily and thread-safely by the JVM's own class-loading guarantee, doing the identical trick without an explicit lock.)</em></p></div></details>
+  <p><strong>The sins — why interviewers push back the moment you reach for Singleton:</strong></p>
+  <ul>
+    <li><strong>It's global mutable state wearing a design-pattern costume.</strong> Any code, anywhere, can reach in and read or change it — the same hidden-coupling disease from §L2.1, at the scale of your whole program.</li>
+    <li><strong>It hides a dependency instead of declaring one.</strong> A class that calls <code class="ic">Config()</code> internally has a dependency on Config that doesn't show up in its constructor signature — the exact violation §L2.7 (Dependency Inversion) exists to prevent. A test can't swap in a fake config without monkeypatching the class itself.</li>
+    <li><strong>It makes testing painful.</strong> Singleton state persists across tests unless you remember to reset it, so tests can pass or fail depending on what ran before them — a classic source of "flaky" test suites.</li>
+    <li><strong>It doesn't survive multiple processes.</strong> Python's <code class="ic">multiprocessing</code> (and any horizontally-scaled service with more than one worker) gives each process its OWN singleton — "exactly one" was only ever true within a single process's memory.</li>
+  </ul>
+  <p><strong>The senior answer, almost always:</strong> don't reach for Singleton — build the object ONCE at the composition point (§L2.7's "edge of the program") and pass it in via constructor injection to everything that needs it. You get the "exactly one shared instance" property without any of the hidden-dependency cost, and tests can inject a fake with zero ceremony.</p>
+<details class="reveal reveal--check"><summary>Check yourself: a teammate proposes DatabaseConnection as a Singleton so "we don't open too many connections." What's the better fix?</summary><div class="reveal-body"><p>A connection POOL, built once and passed in via dependency injection — the pool caps the connection count (the actual goal) without making the connection object itself globally reachable, untestable, and per-process. "One shared X" is usually a hint you want dependency injection of a single constructed object, not a Singleton class.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-d">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-e" data-nav="L3.5 · Observer" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.5</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Observer — one change, many reactions, zero tight coupling</h2>
+  <p><strong>Concept first.</strong> Observer lets a "subject" maintain a list of interested "observers" and notify all of them when something happens — without the subject knowing anything about who its observers are or what they'll do. Registration is the only contract: <code class="ic">subscribe(observer)</code> in, <code class="ic">notify()</code> fans out to everyone currently registered.</p>
+  <p><strong>The signal (router, line 3):</strong> "when one thing changes, many others must react."</p>
+  <p><strong>Real life.</strong> A YouTube channel and its subscribers. The channel doesn't maintain a personal relationship with each of its million subscribers, doesn't know their names, doesn't call them individually — it just posts a video, and every subscriber's feed reacts on its own. Unsubscribing removes you from the list; the channel's posting logic never changes either way.</p>
+  <p>You already built the reacting HALF of this in §L1.3's Notifier polymorphism (one <code class="ic">send()</code> call site, many channel behaviors). What was still missing there was the REGISTRATION half — nobody could dynamically subscribe or unsubscribe; the list of notifiers was hard-wired by whoever called <code class="ic">alert()</code>. Observer completes the picture:</p>
+<pre class="code"><code data-lang="python">class Order:                                # the subject
+    def __init__(self):
+        self._observers = []
+    def subscribe(self, observer):
+        self._observers.append(observer)
+    def unsubscribe(self, observer):
+        self._observers.remove(observer)
+    def ship(self):
+        for obs in self._observers:         # the subject never asks WHAT each observer does
+            obs.on_shipped(self)
+
+class EmailNotifier:
+    def on_shipped(self, order): print("email: your order has shipped")
+
+class SMSNotifier:
+    def on_shipped(self, order): print("sms: your order has shipped")
+
+class InventoryUpdater:
+    def on_shipped(self, order): print("inventory: decrement stock")
+
+order = Order()
+order.subscribe(EmailNotifier())
+order.subscribe(InventoryUpdater())
+order.ship()                                # both react; Order never named either class</code></pre>
+<figure class="fig"><svg viewBox="0 0 640 190" role="img" aria-label="An Order subject fanning out ship notifications to its registered observers"><rect class="dg-boxa" x="260" y="20" width="140" height="50" rx="4"/><text class="dg-ta" x="330" y="50" text-anchor="middle">Order.ship()</text><line class="dg-ea" x1="290" y1="70" x2="120" y2="130"/><line class="dg-ea" x1="330" y1="70" x2="330" y2="130"/><line class="dg-ea" x1="370" y1="70" x2="540" y2="130"/><rect class="dg-box" x="40" y="130" width="160" height="40" rx="4"/><text class="dg-t" x="120" y="154" text-anchor="middle">EmailNotifier</text><rect class="dg-box" x="250" y="130" width="160" height="40" rx="4"/><text class="dg-t" x="330" y="154" text-anchor="middle">InventoryUpdater</text><rect class="dg-box" x="460" y="130" width="160" height="40" rx="4"/><text class="dg-t" x="540" y="154" text-anchor="middle">SMSNotifier (not subscribed)</text><text class="dg-td" x="330" y="100" text-anchor="middle">notify() fans out to whoever is registered right now</text></svg><figcaption>Order holds a list, not a fixed set of classes. Adding a fourth observer next month is a subscribe() call somewhere else — Order's own code is never reopened.</figcaption></figure>
+  <p><strong>The trap: memory leaks from forgotten unsubscribes.</strong> An observer that's dropped by the rest of the program but never called <code class="ic">unsubscribe()</code> stays referenced by the subject's list forever — a classic source of slow memory growth in long-running services. In languages with weak references (Java, C#), Observer implementations often hold observers weakly for exactly this reason; in Python, discipline (explicit unsubscribe, or a context-manager pattern) is the usual answer.</p>
+<details class="reveal reveal--check"><summary>Check yourself: how is Observer different from the Notifier polymorphism you built in §L1.3?</summary><div class="reveal-body"><p>§L1.3's alert() loop iterated over a channel list the CALLER assembled and passed in — the list itself was static per call. Observer adds subscribe()/unsubscribe() to the subject itself, so the list of reactors can change dynamically at runtime, and the subject (not some external caller) owns and maintains who's currently listening.</p></div></details>
+  <p>Zoom out far enough and Observer is the design-pattern-scale ancestor of the publish/subscribe systems (Kafka, SNS/SQS) you'll meet in HLD's async & queues set — same idea, one process versus a whole distributed system.</p>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-e">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-f" data-nav="L3.6 · Decorator" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.6</span> · SET L3 — THE EVERYDAY SIX</p>
+  <h2>Decorator — layering behavior without a subclass explosion</h2>
+  <p><strong>Concept first.</strong> Decorator wraps an object in another object that shares its interface, adds some behavior before or after delegating to the wrapped object, and can itself be wrapped again — layers stack freely, in any combination, chosen at runtime, without a new subclass for every combination.</p>
+  <p><strong>The signal (router, line 4):</strong> "features stack in layers" — logging, retries, caching, compression, each independently optional, each combinable with the others.</p>
+  <p><strong>Real life.</strong> Wrapping a gift. The gift itself doesn't change — you place it in a box (layer one), wrap the box in paper (layer two), tie a ribbon around that (layer three). Each layer adds something visible from the outside while the thing inside stays exactly what it was, and you could stop after any layer, or add a fourth, without redesigning the gift.</p>
+  <p><strong>Why not just subclass?</strong> Recall §L1.4's flying-swimming-armored character explosion: n independent add-ons need 2ⁿ subclasses if you try to inherit your way there. A Notifier that might need logging, might need retries, and might need both, in either order, has exactly this shape.</p>
+<pre class="code"><code data-lang="python">class Notifier(ABC):
+    @abstractmethod
+    def send(self, msg): ...
+
+class EmailNotifier(Notifier):
+    def send(self, msg): print(f"email: {msg}")
+
+class NotifierDecorator(Notifier):            # the base wrapper: same interface, holds one Notifier
+    def __init__(self, wrapped: Notifier):
+        self._wrapped = wrapped
+    def send(self, msg):
+        self._wrapped.send(msg)               # default: just delegate
+
+class LoggingNotifier(NotifierDecorator):
+    def send(self, msg):
+        print(f"[log] sending: {msg}")
+        super().send(msg)
+
+class RetryNotifier(NotifierDecorator):
+    def __init__(self, wrapped, attempts=3):
+        super().__init__(wrapped)
+        self.attempts = attempts
+    def send(self, msg):
+        for i in range(self.attempts):
+            try:
+                self._wrapped.send(msg)
+                return
+            except Exception:
+                if i == self.attempts - 1: raise
+
+notifier = LoggingNotifier(RetryNotifier(EmailNotifier()))
+notifier.send("your order shipped")
+# [log] sending: your order shipped
+# email: your order shipped
+# — logging wraps retry wraps the real sender; reorder the two lines to log INSIDE each retry attempt instead</code></pre>
+<figure class="fig"><svg viewBox="0 0 640 170" role="img" aria-label="LoggingNotifier wrapping RetryNotifier wrapping EmailNotifier, like nested gift wrapping"><rect class="dg-box" x="40" y="20" width="560" height="130" rx="6"/><text class="dg-td" x="330" y="42" text-anchor="middle">LoggingNotifier</text><rect class="dg-boxa" x="90" y="55" width="460" height="80" rx="6"/><text class="dg-ta" x="330" y="77" text-anchor="middle">RetryNotifier</text><rect class="dg-boxw" x="150" y="90" width="340" height="34" rx="4"/><text class="dg-tw" x="320" y="112" text-anchor="middle">EmailNotifier (the real sender)</text></svg><figcaption>Each layer calls send() on the one it wraps, adding its own behavior before or after. Peel off a layer, or add a new one, and the ones inside are untouched.</figcaption></figure>
+  <p><strong>Every decorator implements the SAME interface as the thing it wraps</strong> — that's what makes the layers composable: <code class="ic">RetryNotifier(EmailNotifier())</code> is itself a valid Notifier, so it can be handed to yet another decorator, or to any code expecting a plain Notifier, without that code knowing it's holding a stack of wrappers.</p>
+<details class="reveal reveal--check"><summary>Check yourself: notifier = RetryNotifier(LoggingNotifier(EmailNotifier())) — swapped order from the example above. What changes?</summary><div class="reveal-body"><p>Now each retry ATTEMPT gets its own log line (logging is inside the retry loop), versus the original order which logs once before all retry attempts run. Same two decorators, different composition order, genuinely different behavior — a live demonstration of why "layers, freely combinable" is the whole point.</p></div></details>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-f">Mark understood</button></div>
+</section>
+
+<section class="sec" id="l3-traps" data-nav="L3.7 · Traps & drill" data-group="Set L3 · The everyday six">
+  <p class="eyebrow"><span class="dim">§L3.7</span> · BEFORE MOVING ON + INTERROGATION</p>
+  <h2>Traps, signals &amp; interrogation</h2>
+  <ul class="bugcheck">
+    <li><label><input type="checkbox"><span>Strategy for a choice that will never grow past two options, made once at startup — a plain if/elif is honestly simpler (YAGNI, §L2.2)</span></label></li>
+    <li><label><input type="checkbox"><span>A growing if/elif of class names scattered across many call sites — centralize it into a Factory before it's copy-pasted a third time</span></label></li>
+    <li><label><input type="checkbox"><span>A constructor with 6+ parameters, several booleans, unclear at the call site — Builder (or Python keyword-only args) before someone swaps two positional args by mistake</span></label></li>
+    <li><label><input type="checkbox"><span>A naive Singleton with a bare "if _instance is None" check — a race under threads; needs double-checked locking or, better, a module-level instance</span></label></li>
+    <li><label><input type="checkbox"><span>Reaching for Singleton at all when dependency injection (§L2.7) would give the same "one shared instance" without hiding the dependency</span></label></li>
+    <li><label><input type="checkbox"><span>An Observer that's dropped elsewhere in the program but never unsubscribed — a slow memory leak in long-running services</span></label></li>
+    <li><label><input type="checkbox"><span>A decorator that doesn't implement the SAME interface as what it wraps — breaks composability, the whole reason the pattern exists</span></label></li>
+    <li><label><input type="checkbox"><span>Naming a pattern with no "because" — "I'll use Factory here" with no stated reason scores nothing, same warning as every set so far</span></label></li>
+  </ul>
+  <h3>Interrogation — answer in your journal</h3>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.1</span><p class="jq-text">A junior teammate wraps a single if/else (exactly two branches, confirmed never growing) in a full Strategy hierarchy with an ABC and two ConcreteStrategy classes. Argue against it using a principle from §L2.</p></div>
+    <textarea class="journal" data-jkey="l3q1" placeholder="Which §L2 principle, and why it applies here…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> which §L2.2 guardrail warns against building for change that isn't coming?</p><p><strong>Sketch:</strong> YAGNI. Three extra classes and an interface for a choice confirmed frozen at two options is speculative flexibility nobody asked for — KISS says the plain if/else is the simplest thing that satisfies today's requirement, and Strategy can be introduced later in minutes if a third branch genuinely arrives.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.2</span><p class="jq-text">Refactor from memory: five different call sites each contain the same if/elif choosing between CompactSpot, LargeSpot, and HandicapSpot. Show the Factory that fixes it, and say what changes at each of the five call sites.</p></div>
+    <textarea class="journal" data-jkey="l3q2" placeholder="The factory + what each call site becomes…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> what's the one line every call site should end up sharing?</p><p><strong>Sketch:</strong> A ParkingSpotFactory.create(spot_type, spot_id) with an internal registry/branch. Every call site collapses its multi-line elif ladder into one line: spot = ParkingSpotFactory.create(spot_type, spot_id). A new spot type becomes one registry entry in the factory instead of five edited call sites.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.3</span><p class="jq-text">Design a Builder for a Pizza order (base, size, up to N toppings, crust type). Show the chain a caller writes, and explain what .build() should validate before returning the Pizza.</p></div>
+    <textarea class="journal" data-jkey="l3q3" placeholder="The chain + what build() checks…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> what could a caller forget to set that would make an unusable Pizza?</p><p><strong>Sketch:</strong> PizzaBuilder("large").crust("thin").topping("mushroom").topping("olives").build(). build() should validate the pieces that MUST be present (size, crust) and reject nonsensical combinations (e.g. zero toppings on a "loaded" pizza) — the validation is exactly why build() is a separate step from the chain itself, not folded into __init__.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.4</span><p class="jq-text">Explain the exact race condition in the naive Singleton (bare "if _instance is None" check), then explain why the fix needs the None check TWICE, not once.</p></div>
+    <textarea class="journal" data-jkey="l3q4" placeholder="The race + why two checks…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> what could thread B observe while thread A is still inside the "act" half?</p><p><strong>Sketch:</strong> Two threads can both pass "is None?" before either finishes creating an instance, since check-then-act isn't one atomic operation — both then build a separate object. The outer check avoids taking a lock once the singleton already exists (the common case, for speed); the inner check (after acquiring the lock) catches the case where a second thread was already waiting on the lock while the first thread finished building — without it, the second thread would build a redundant second instance right after acquiring the lock.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.5</span><p class="jq-text">Design an Observer-based YouTube-style notifier from scratch: a Channel that creators post to, and Subscribers that react. Include subscribe AND unsubscribe, and name the memory-leak trap from this section.</p></div>
+    <textarea class="journal" data-jkey="l3q5" placeholder="Channel/Subscriber design + the leak trap…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> what does the Channel own that a forgotten unsubscribe leaves dangling?</p><p><strong>Sketch:</strong> Channel holds a list of Subscribers; post_video() loops the list calling each subscriber's on_new_video(). subscribe()/unsubscribe() mutate that list. The leak trap: a Subscriber object dropped elsewhere in the program but never unsubscribed stays referenced by Channel's list forever, so it (and everything it holds) never gets garbage collected — a slow memory leak in a long-running service.</p></div></details>
+  </div>
+  <div class="jq">
+    <div class="jq-q"><span class="jq-num">L3.6</span><p class="jq-text">Build a 3-layer Decorator chain (your own choice of layers) around any interface from an earlier set. Then argue, using §L1.4's numbers, why this beats subclassing every combination.</p></div>
+    <textarea class="journal" data-jkey="l3q6" placeholder="The chain + the 2ⁿ argument…"></textarea>
+  <details class="reveal reveal--hint"><summary>Hint → answer sketch<span class="hint">journal first</span></summary><div class="reveal-body"><p><strong>Hint:</strong> how many subclasses would 3 independently-optional features need under inheritance?</p><p><strong>Sketch:</strong> (grading is the STRUCTURE) — e.g. CachingSource(CompressingSource(RawDataSource())), each implementing the same interface. Under inheritance, 3 independent add-ons need up to 2³ = 8 subclasses to cover every combination (§L1.4's exact explosion); under Decorator, 3 wrapper classes cover all 8 combinations by composition, and a 4th feature adds one class instead of doubling the subclass count again.</p></div></details>
+  </div>
+
+  <div class="sec-foot"><button class="btn understood" data-sec="l3-traps">Mark understood</button></div>
+</section>
+
 <!-- ================= LADDER ================= -->
 <section class="sec" id="ladder-sec" data-nav="Practice ladder" data-group="Drills">
   <p class="eyebrow"><span class="dim">§∞</span> · RUN THE PROTOCOL ON EACH</p>
@@ -1489,12 +1824,19 @@ service = NotificationService(EmailSender())    # wired up at the edge of the pr
     { set: 'L2', key: 'ocp-discount', name: 'Kill the discount elif ladder', focus: 'Strategy-ify DiscountCalculator; add a 4th tier with zero edits to old code' },
     { set: 'L2', key: 'lsp-shapes', name: 'Fix a Rectangle/Square LSP break', focus: 'find the broken client assumption; redesign without the false is-a' },
     { set: 'L2', key: 'isp-worker', name: 'Split a fat Worker interface', focus: 'Workable vs Feedable; stop RobotWorker faking eat()' },
-    { set: 'L2', key: 'dip-report', name: "Invert ReportGenerator's DB dependency", focus: 'constructor-inject a DataSource; make it testable with a fake' }
+    { set: 'L2', key: 'dip-report', name: "Invert ReportGenerator's DB dependency", focus: 'constructor-inject a DataSource; make it testable with a fake' },
+    { set: 'L3', key: 'strategy-fare', name: 'Ride-fare Strategy', focus: 'flat, surge, and pool fares behind one FareStrategy interface' },
+    { set: 'L3', key: 'factory-parking-spot', name: 'ParkingSpotFactory', focus: 'centralize compact/large/handicap creation; add motorcycle with one line' },
+    { set: 'L3', key: 'builder-http-request', name: 'Fluent HTTPRequestBuilder', focus: 'kill the telescoping constructor; every call site self-documents' },
+    { set: 'L3', key: 'singleton-threadsafe', name: 'Thread-safe config Singleton', focus: 'double-checked locking, then the module-level alternative' },
+    { set: 'L3', key: 'observer-youtube', name: 'YouTube-style Observer', focus: 'Channel + Subscribers, subscribe/unsubscribe, no leaked references' },
+    { set: 'L3', key: 'decorator-notifier', name: 'Layer a Notifier with Decorator', focus: 'LoggingNotifier + RetryNotifier, freely reorderable' }
   ];
   var SET_LABELS = {
     'L0': 'Set L0 · Objects from zero',
     'L1': 'Set L1 · The four pillars',
-    'L2': 'Set L2 · Good design vocabulary + SOLID'
+    'L2': 'Set L2 · Good design vocabulary + SOLID',
+    'L3': 'Set L3 · The everyday six'
   };
   function addDays(iso, d) {
     var dt = new Date(iso + 'T12:00:00');
@@ -1612,7 +1954,13 @@ service = NotificationService(EmailSender())    # wired up at the edge of the pr
     { q: '"a subclass override raises \'not supported\' — or quietly tightens what it accepts"', a: 'Liskov Substitution violated — remove the false is-a, don\'t patch the child' },
     { q: '"an interface has methods some implementers can\'t honestly support"', a: 'Interface Segregation — split into smaller, role-specific interfaces' },
     { q: '"a class does self.thing = ConcreteDetail() inside its own constructor"', a: 'Dependency Inversion violated — inject the abstraction from outside instead' },
-    { q: '"identical code in two places — merge it?"', a: 'only if it\'s the SAME rule, not a coincidence — DRY the concept, not the text' }
+    { q: '"identical code in two places — merge it?"', a: 'only if it\'s the SAME rule, not a coincidence — DRY the concept, not the text' },
+    { q: '"an algorithm must be swappable at runtime, and the family of algorithms will grow"', a: 'Strategy — same interface, interchangeable behavior' },
+    { q: '"the same if/elif choosing a class is copy-pasted across many call sites"', a: 'Factory — centralize the "which class?" decision in one place' },
+    { q: '"a constructor is drowning in optional parameters, some of them booleans"', a: 'Builder — a fluent chain, one named step at a time' },
+    { q: '"exactly one shared instance is needed everywhere" — before reaching for Singleton', a: 'ask whether dependency injection gives the same guarantee without hiding it' },
+    { q: '"many unrelated parts must react when one thing changes"', a: 'Observer — subscribe/notify, the subject never names its listeners' },
+    { q: '"optional features stack in layers and must combine freely"', a: 'Decorator — same-interface wrappers, nested at runtime' }
   ];
   var queue = [], flipped = false, firstTry = 0, seenCount = 0, missedNow = {};
   var quizOn = false, quizAnswered = false, quizRight = 0, quizSeen = 0;
